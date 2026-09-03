@@ -32,7 +32,23 @@
 ---
 
 ## 2. Character Roster
-*(To be decided in Step A2)*
+
+All characters strictly follow our smooth chibi shape language (pill-shaped torsos, stubby limbs, oversized heads, rounded contours). Initial models are generated as clean Studio primitive assemblies with rarity particle auras, serving as placeholders until custom 3D mesh assets are imported.
+
+| Pet ID | Name | Rarity Tier | Reference File | Color & Silhouette Specification | Aura VFX Specification | Base Income Rate |
+|---|---|---|---|---|---|---|
+| dog_fluff | **Fluff Dog** | **Common** | ssets/references/pets/ref_dog.png | Charcoal grey coat with snowy white muzzle & chest blaze, warm caramel eyebrow dots and cheeks, floppy ears. | Soft White / Silver subtle aura glow | 10 coins/sec |
+| cat_chibi | **Chibi Cat** | **Common** | ssets/references/pets/ref_cat.png | Plump tuxedo kitten, dark espresso & white blaze, lime green eyes, pink inner ears. | Soft White / Silver subtle aura glow | 10 coins/sec |
+| unny_frost | **Frost Bunny** | **Rare** | ssets/references/pets/ref_bunny.png | Standing pill-shaped white rabbit, coral-pink button nose, pastel pink teardrop ears. | Luminous Aqua / Cyan cold mist aura | 25 coins/sec |
+| owl_storm | **Storm Owl** | **Epic** | ssets/references/pets/ref_owl.png | Chubby snowy owl, white and silver-grey plumage, spread layered wings, amber-orange beak. | Royal Purple twinkling star-sparkle aura | 50 coins/sec |
+| ox_frost | **Frost Fox** | **Epic** | ssets/references/pets/ref_frost_fox.png | Radiant cyan kitsune fox, oversized flared ears, tiered white plume tail and chest ruff. | Royal Purple & crystalline frost aura | 50 coins/sec |
+| dragon_aura | **Aura Dragon** | **Legendary** | ssets/references/pets/ref_aura_dragon.png | Midnight charcoal chibi dragon, glowing neon-cyan runic horns & wing accents, ethereal cyan soulfire. | Radiant Gold halo & Prismatic shimmer aura | 100 coins/sec |
+
+### Asset Sourcing & Placeholder Policy
+- Source meshes are not provided upfront.
+- Working placeholder models are constructed in Roblox Studio using smooth CSG/primitive assemblies (Spheres, Cylinders, Block meshes) and colored according to the palette above.
+- Each model is tagged as Placeholder = true in its attributes.
+- Final meshes can be swapped directly into ServerStorage/PetModels with matching part names (PrimaryPart = Body) without any code changes.
 
 ---
 
