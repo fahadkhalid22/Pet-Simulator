@@ -3,9 +3,9 @@
 ## 1. Theme & Art Direction
 
 ### Game Identity
-- **Title:** Auralit (Origin: *Aura* + *Lit* — emphasizing the signature glowing rarity-aura hook)
+- **Title:** Auralit (Origin: *Aura* + *Lit* â€” emphasizing the signature glowing rarity-aura hook)
 - **Genre:** Pet-collecting simulator with passive-income / tycoon mechanics
-- **Target Audience:** Ages 8–16 (bright, approachable, family-friendly, high clarity)
+- **Target Audience:** Ages 8â€“16 (bright, approachable, family-friendly, high clarity)
 - **Overall Tone:** Warm, cheerful, whimsical, and magical. Clean and cozy aesthetics without violence or gritty tones.
 
 ### Color Direction & Palette
@@ -23,7 +23,7 @@
 
 ### Shape Language & Visual Proportions
 - **Character Geometry:** Chibi proportions (approx. 1.5:1 to 2:1 head-to-body ratio). Rounded, friendly silhouettes with pill or spherical torsos, stubby paws, and large expressive eyes. Strictly no sharp edges or intimidating silhouettes.
-- **UI Shape Language:** Friendly and modern. Rounded rectangles (UICorner 10px–14px radius), pill buttons, bold readable typography, and high contrast against pastel backgrounds.
+- **UI Shape Language:** Friendly and modern. Rounded rectangles (UICorner 10pxâ€“14px radius), pill buttons, bold readable typography, and high contrast against pastel backgrounds.
 
 ### Fantasy Intensity & VFX Approach
 - **Light Fantasy:** The core 3D models are recognizable, lovable animals (e.g., Dog, Cat, Bunny, Owl, Fox).
@@ -53,9 +53,48 @@ All characters strictly follow our smooth chibi shape language (pill-shaped tors
 ---
 
 ## 3. UI/UX Specification
-*(To be decided in Step A3)*
+
+### Design Style & Paradigm
+- **Benchmark:** Pet Simulator 99 (tactile, chunky cartoon aesthetic with modern mobile-first clarity).
+- **Geometry:** Rounded cards and pill buttons (UICorner 10px-14px radius), bold outlines (UIStroke 3px, color #2D253F), and simulated 3D bottom bevels for physical click feel.
+- **Color Mapping:**
+  - Panels & Window Backgrounds: Soft Lavender (#DED2F9) with crisp white interior content cards.
+  - Borders & Outlines: High-contrast Deep Night Violet (#2D253F).
+  - Action / Buy Buttons: Mint Green (#A8E6CF) with darker green bottom bevel #72C5A3.
+  - Equip / Active Buttons: Sky Blue (#A0D2EB) with darker blue bevel #6FAAC7).
+  - Close / Destructive Buttons: Coral Peach (#FF9AA2).
+  - Currency Badges: Radiant Gold (#FFD3B6 / #FFBE0B).
+
+### Screens & Layout
+
+#### 1. Main HUD (Always Visible)
+- **Top-Right Currency Container:**
+  - Pill frame with gold coin icon, displaying formatted coin count (e.g., 100, 1.5K, 250K).
+  - Floating +XX coin popups on passive earnings tick.
+- **Top-Center/Right Equipped Pet Badge:**
+  - Compact badge displaying active pet count (e.g., Pets: 1/3).
+- **Left-Side Vertical Action Dock:**
+  - Stacked square-rounded buttons (60x60 px on desktop, scaled via UIScale on mobile):
+    - Inventory Button: Toggles Pet Management modal.
+    - Shop Button: Toggles Pet Hatching & Egg Shop modal.
+    - Settings Button: Audio mute, graphic toggles.
+
+#### 2. Modal Windows (Shop & Inventory)
+- **Framework:** Centered modal dialog (AnchorPoint = (0.5, 0.5), Position = (0.5, 0, 0.5, 0)).
+- **Header:** Clean pastel header bar with bold title and top-right chunky close button.
+- **Pet Card Grid:**
+  - Responsive UIGridLayout of square pet cards.
+  - Card Header: Pet rarity badge (Common/Rare/Epic/Legendary colors).
+  - Card Body: 3D ViewportFrame showing rotating pet model with active particle aura.
+  - Card Footer: Pet Name, earning rate (+XX/s), and interactive action button (BUY [XX Coins] or EQUIP / UNEQUIP).
+
+### Button Interaction States
+- **Normal:** Full size (1.0x), 4px visible bottom shadow bevel.
+- **Hover (Desktop):** Scales to 1.04x, slight brightness lift.
+- **Pressed / Tap (Mobile & Desktop):** Compresses to 0.96x scale, bottom bevel depresses, emits tactile pop sound.
 
 ---
+
 
 ## 4. Animation & VFX Specification
 *(To be decided in Step A4)*
