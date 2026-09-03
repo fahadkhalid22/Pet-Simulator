@@ -1,10 +1,10 @@
 # Roadmap
 
-- [ ] Phase A: Creative Foundation
-  - [ ] Step A1: Theme & Art Direction
-  - [ ] Step A2: Character Roster & References
-  - [ ] Step A3: UI & Button Style References
-  - [ ] Step A4: Animation & VFX References
+- [x] Phase A: Creative Foundation
+  - [x] Step A1: Theme & Art Direction
+  - [x] Step A2: Character Roster & References
+  - [x] Step A3: UI & Button Style References
+  - [x] Step A4: Animation & VFX References
 - [ ] Phase B: Technical Foundation
   - [ ] Step B1: Repo & Tooling Confirmation
   - [ ] Step B2: Player Data System

@@ -97,9 +97,36 @@ All characters strictly follow our smooth chibi shape language (pill-shaped tors
 
 
 ## 4. Animation & VFX Specification
-*(To be decided in Step A4)*
+
+### 1. Pet Follow & Idle Physics
+- **Floating Idle Oscillation:**
+  - Pets hover approx. 1.8 studs above the ground.
+  - Smooth sinusoidal vertical bobbing: offset Y = math.sin(time * 3.5) * 0.35 studs.
+  - Frequency: 3.5 rad/s, Amplitude: 0.35 studs.
+- **Formation Follow Mechanics:**
+  - Equipped pets float in a trailing semi-circle formation behind the player character.
+  - Smooth CFrame:Lerp interpolation (alpha 0.12-0.18) on RenderStepped to ensure zero jitter and no terrain collision clipping.
+- **Dynamic Banking / Tilting:**
+  - Pets tilt 10-15 degrees in the movement vector direction when travelling, restoring to level upright orientation when idle.
+
+### 2. Tiered Rarity Aura VFX
+- **Common (Fluff Dog, Chibi Cat):**
+  - Ambient silver-white dust motes (#E5E5E5), rate 10/s, lifetime 1.0s, LightEmission 0.4.
+- **Rare (Frost Bunny):**
+  - Luminous cyan frost mist (#3A86FF) with floating snowflake specks, rate 18/s, lifetime 1.2s, LightEmission 0.8.
+- **Epic (Storm Owl, Frost Fox):**
+  - Royal violet twinkling starburst sparkles (#8338EC) and stardust, rate 25/s, lifetime 1.4s, LightEmission 0.9, faint PointLight radius 6.
+- **Legendary (Aura Dragon):**
+  - Dual-layer aura: Radiant gold prismatic shimmer (#FFBE0B) combined with neon-cyan soulflame wisps (#00EBF0), rate 35/s, lifetime 1.5s, pulsing PointLight radius 10, brightness 1.5.
+
+### 3. Reward & Collection Effects
+- **Coin Income Tick:**
+  - Floating coin icon and text pop (+XX Coins) springing upward above pet and lerping toward HUD currency bar.
+- **Egg Hatch Sequence:**
+  - Anticipation wobble (1.5s) -> Flash of white light -> Rarity-colored burst explosion revealing the pet with celebratory chime.
 
 ---
+
 
 ## 5. Economy Balancing Table
 *(To be finalized in Phase B)*

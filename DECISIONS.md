@@ -10,3 +10,4 @@
 - **2026-09-03**: SerializerPugi::deserializeImpl ill-formed XML when opening custom .rbxlx. Root cause: PowerShell string escaping stripped XML quotes during generation. Fix: Removed generated .rbxlx; use native Studio Baseplate template with ServerScriptService script creation.
 
 | 2026-09-03 | Step A3 | Defined UI/UX Direction (PS99 Style) | Benchmarked Pet Simulator 99 chunky cartoon buttons, left-dock HUD, pastel lavender modal frames, and mobile-first responsive layout. |
+| 2026-09-03 | Step A4 | Defined Animation & VFX Direction | Locked floating/bobbing idle loop (sine-wave 3.5 rad/s, 0.35 studs), banking follow physics, 4-tier rarity aura VFX, and coin pop feedback. |
