@@ -11,3 +11,4 @@
 
 | 2026-09-03 | Step A3 | Defined UI/UX Direction (PS99 Style) | Benchmarked Pet Simulator 99 chunky cartoon buttons, left-dock HUD, pastel lavender modal frames, and mobile-first responsive layout. |
 | 2026-09-03 | Step A4 | Defined Animation & VFX Direction | Locked floating/bobbing idle loop (sine-wave 3.5 rad/s, 0.35 studs), banking follow physics, 4-tier rarity aura VFX, and coin pop feedback. |
+| 2026-09-03 | Step B1 | Tooling & Repository Confirmation | Confirmed GitHub repo https://github.com/fahadkhalid22/Pet-Simulator.git and Option A modular Studio workflow. Verified web structure. |

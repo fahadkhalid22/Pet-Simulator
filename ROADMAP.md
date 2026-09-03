@@ -6,7 +6,7 @@
   - [x] Step A3: UI & Button Style References
   - [x] Step A4: Animation & VFX References
 - [ ] Phase B: Technical Foundation
-  - [ ] Step B1: Repo & Tooling Confirmation
+  - [x] Step B1: Repo & Tooling Confirmation
   - [ ] Step B2: Player Data System
   - [ ] Step B3: Pet Acquisition & Passive Earning
   - [ ] Step B4: UI Implementation
