@@ -23,10 +23,10 @@ RESULT: DIRECTOR VERIFIED / TEST-B2-01 AND TEST-B2-02 PASSED
 
 | ID | File/System | Purpose | Status | Problem | Severity | Fix | Verification |
 |---|---|---|---|---|---|---|---|
-| B3-01 | PetConfig | Centralize pet identity, prices, rarity, models, and income | STATICALLY VERIFIED | Pet definitions and economy values were not implemented | HIGH | Added a frozen six-pet catalog with confirmed rarity income and documented prices | Readback and malformed-literal scan passed; Studio runtime pending |
-| B3-02 | Pet acquisition and equipment | Purchase, grant, equip, and unequip persistent pets | STATICALLY VERIFIED | No authoritative acquisition or equipment service existed | HIGH | Added atomic balance checks, unique pet UIDs, inventory/equip limits, ownership validation, and auto-equip | Manual concurrency/security review passed; Studio runtime pending |
-| B3-03 | Passive income | Award coins from equipped owned pets | STATICALLY VERIFIED | Equipped pets did not generate currency | HIGH | Added one server loop with authoritative aggregation, fractional carry, catch-up cap, and coin cap | Manual rate/duplication review passed; Studio timing test pending |
-| B3-04 | Pet remotes | Provide a secure B4-facing request surface | STATICALLY VERIFIED | No validated client request path existed | HIGH | Added rate-limited purchase/equip/unequip requests plus player-only state and income events | Malformed-input and trust-boundary review passed; exploit test pending |
+| B3-01 | PetConfig | Centralize pet identity, prices, rarity, models, and income | DIRECTOR VERIFIED | Pet definitions and economy values were not implemented | HIGH | Added a frozen six-pet catalog with confirmed rarity income and documented prices | TEST-B3-01 and TEST-B3-02 passed with correct rates and purchase values |
+| B3-02 | Pet acquisition and equipment | Purchase, grant, equip, and unequip persistent pets | DIRECTOR VERIFIED | No authoritative acquisition or equipment service existed | HIGH | Added atomic balance checks, unique pet UIDs, inventory/equip limits, ownership validation, and auto-equip | Purchases, deductions, ownership, equip limits, and persistence passed |
+| B3-03 | Passive income | Award coins from equipped owned pets | DIRECTOR VERIFIED | Equipped pets did not generate currency | HIGH | Added one server loop with authoritative aggregation, fractional carry, catch-up cap, and coin cap | Passive income and unequip/re-equip behavior passed |
+| B3-04 | Pet remotes | Provide a secure B4-facing request surface | DIRECTOR VERIFIED | No validated client request path existed | HIGH | Added rate-limited purchase/equip/unequip requests plus player-only state and income events | TEST-B3-03 validation and rate limiting passed; no critical B3 errors |
 
 ## B3 Root-Cause Report
 
@@ -35,9 +35,9 @@ ITEM: B3 Pet Acquisition & Passive Earning
 PROBLEM: The verified data layer had no pet catalog, acquisition API, equipment actions, income loop, or secure client request surface.
 ROOT CAUSE: Step B3 had not been implemented.
 FILES AFFECTED: GameConfig.lua, PetConfig.lua, PetService.lua, DataBootstrap.server.lua
-DEPENDENCIES: B2 Director verification complete; Roblox Studio runtime verification required
+DEPENDENCIES: B2 complete; B3 runtime behavior verified in Studio
 SEVERITY: HIGH
 ACTION: Implemented centralized configuration and server-authoritative pet progression.
-TEST: Static source, malformed-literal, security, concurrency, and duplicate-loop reviews completed.
-RESULT: STATICALLY VERIFIED / RUNTIME TEST REQUIRED
+TEST: Static checks plus TEST-B3-01, TEST-B3-02, and TEST-B3-03 completed.
+RESULT: DIRECTOR VERIFIED / ALL B3 RUNTIME TESTS PASSED
 ```
