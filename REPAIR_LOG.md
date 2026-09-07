@@ -41,3 +41,23 @@ ACTION: Implemented centralized configuration and server-authoritative pet progr
 TEST: Static checks plus TEST-B3-01, TEST-B3-02, and TEST-B3-03 completed.
 RESULT: DIRECTOR VERIFIED / ALL B3 RUNTIME TESTS PASSED
 ```
+
+| ID | File/System | Purpose | Status | Problem | Severity | Fix | Verification |
+|---|---|---|---|---|---|---|---|
+| B4-01 | UIConfig | Centralize the Auralit UI palette and responsive dimensions | STATICALLY VERIFIED | B4 had no shared visual tokens | HIGH | Added frozen palette, rarity colors, modal limits, card sizing, and 56-pixel touch minimum | Source reviewed; Studio rendering required |
+| B4-02 | UIBuilder | Build the HUD, navigation, shop/inventory modal, pet cards, and feedback | STATICALLY VERIFIED | No core player UI existed | HIGH | Added code-native responsive components, constrained text, scrolling grids, reusable buttons, toasts, and income popups | Source reviewed; TEST-B4-01 through TEST-B4-04 required |
+| B4-03 | Auralit UI controller | Connect UI views to authoritative pet state and actions | STATICALLY VERIFIED | Players had no interface for B3 progression | HIGH | Added validated snapshot rendering, live HUD attributes, affordability states, request locking, purchase/equip actions, and viewport updates | Server authority preserved; Studio interaction and mobile verification required |
+
+## B4 Root-Cause Report
+
+```text
+ITEM: B4 UI Implementation
+PROBLEM: The verified pet loop had no HUD, pet shop, inventory, or mobile interaction layer.
+ROOT CAUSE: Step B4 had not been implemented.
+FILES AFFECTED: UIConfig.lua, UIBuilder.lua, AuralitUI.client.lua
+DEPENDENCIES: B3 Director verified; Roblox Studio runtime and device-emulator access required
+SEVERITY: HIGH
+ACTION: Implemented a code-native, server-backed, mobile-responsive Phase 1 interface.
+TEST: Static source and diff checks completed; four focused Studio runtime checks remain.
+RESULT: STATICALLY VERIFIED / DIRECTOR RUNTIME TEST REQUIRED
+```
