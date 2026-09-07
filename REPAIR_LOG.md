@@ -62,6 +62,56 @@ TEST: Static source and diff checks completed; four focused Studio runtime check
 RESULT: STATICALLY VERIFIED / DIRECTOR RUNTIME TEST REQUIRED
 ```
 
+| ID | File/System | Purpose | Status | Problem | Severity | Fix | Verification |
+|---|---|---|---|---|---|---|---|
+| B4P-01 | Pet character source models | Replace generic placeholder geometry with the six approved character identities | STATICALLY VERIFIED | The previous sources were minimal Body/Head primitives and did not represent the reference roster | HIGH | Rebuilt all six as detailed Roblox-native assemblies with species-specific silhouettes and exact PetConfig names | Automated 6/6/6 parity, XML, geometry, class, metadata, and naming checks passed; Studio visual review required |
+| B4P-02 | Pet metadata and orientation | Make imported models deterministic and inspectable | STATICALLY VERIFIED | Source models lacked a complete shared authoring contract | HIGH | Set `Body` as PrimaryPart and added exact identity, rarity, rate, semantic version, placeholder state, and `-Z` forward attributes | `validate-pet-models.ps1` passed all six models |
+| B4P-03 | Pet rarity VFX | Communicate rarity without external assets or obscuring geometry | STATICALLY VERIFIED | The old placeholders had no restrained per-rarity presentation | MEDIUM | Added texture-free native particles and local lights with capped aggregate rates | VFX node names, missing Texture properties, and rate caps validated; Studio readability/performance tests required |
+| B4P-04 | PetRuntimeService grounding | Keep differently sized models aligned to the world while preserving B4.5 authority and follow behavior | STATICALLY VERIFIED | A fixed pivot offset would leave rebuilt pets floating or clipping | HIGH | Added guarded bounding-box bottom lift to the existing shared Heartbeat target calculation | Source reviewed; formation, respawn, rejoin, and multiplayer Studio tests required |
+| B4P-05 | Pet model authoring pipeline | Prevent Play mode from replacing committed character sources | STATICALLY VERIFIED | `BuildPetModels.server.lua` destroyed canonical models and regenerated the rejected minimal placeholders | CRITICAL | Removed the startup builder; committed `.rbxmx` files are now the canonical, explicitly imported sources | Validator passes and Studio replacement-sync procedure documented |
+
+## B4P Root-Cause Report
+
+```text
+ITEM: B4P Pet Character Roster Rebuild
+PROBLEM: Runtime spawning worked, but every source model was an under-detailed generic primitive placeholder.
+ROOT CAUSE: The startup builder treated generated placeholder geometry as authoritative and overwrote imported ServerStorage sources during Play.
+FILES AFFECTED: ServerStorage/PetModels/*.rbxmx, BuildPetModels.server.lua, PetRuntimeService.lua
+DEPENDENCIES: B4.5 authoritative equipped-state runtime; six approved reference PNGs; PetConfig mapping
+SEVERITY: CRITICAL
+ACTION: Rebuilt all six native character assemblies, removed the destructive builder, added bounded VFX and validation, and made follow grounding bounds-aware.
+TEST: Static validator and repository checks completed; TEST-PETMODEL-01 through TEST-PETMODEL-12 remain for Director Studio execution.
+RESULT: STATICALLY VERIFIED / DIRECTOR STUDIO TEST REQUIRED
+```
+
+## B4P Reference Checklist
+
+| Pet | Reference-led native character treatment | Required identity cues present | VFX treatment |
+|---|---|---|---|
+| Fluff Dog | Charcoal, white, and caramel fluffy puppy | Floppy ears, facial blaze, layered amber eyes, muzzle, paws, visible tipped tail | Low-rate `SilverDust` |
+| Chibi Cat | Black-and-white tuxedo cat | Triangular pink-inner ears, green eyes, feline muzzle, white face/chest, long raised tail | Low-rate `SilverDust` |
+| Frost Bunny | Upright white-and-ice rabbit | Two long pink-inner ears, coral nose, standing limbs, round rabbit tail | `CyanMist` plus sparse `SnowSpecks` |
+| Storm Owl | Snowy round owl | Paired eye discs, amber beak and feet, raised layered wings, tail feathers | `VioletSparkles` plus restrained local aura light |
+| Frost Fox | Cyan arctic fox | Oversized ears, fox muzzle, white chest ruff, large tiered plume tail | `VioletSparkles`, sparse `FrostSpecks`, and restrained local aura light |
+| Aura Dragon | Chibi dragon adaptation of the cyan/gold Overseer reference | Snout, four horns, clawed feet, wings, long tail, chest and forehead runes | `GoldShimmer`, `CyanSoulfire`, and restrained Legendary aura light |
+
+## B4P Director Studio Tests
+
+| Test | Action | Pass condition |
+|---|---|---|
+| TEST-PETMODEL-01 — Fluff Dog | Spawn one equipped Fluff Dog | It is clearly a dog, its face is readable, no geometry is detached, and it follows correctly |
+| TEST-PETMODEL-02 — Chibi Cat | Spawn an equipped Chibi Cat beside a Fluff Dog if available | It is unmistakably a cat; triangular pink ears, green eyes, and tuxedo face/chest are visible; it cannot be confused with Fluff Dog |
+| TEST-PETMODEL-03 — Frost Bunny | Spawn an equipped Frost Bunny | Rabbit identity, both ears, and nose are obvious; it does not look like a sphere-only placeholder |
+| TEST-PETMODEL-04 — Storm Owl | Spawn an equipped Storm Owl | Owl identity, both wings, and beak are obvious |
+| TEST-PETMODEL-05 — Frost Fox | Spawn an equipped Frost Fox | Fox identity, cyan body, large ears, white plume tail, and chest ruff are obvious |
+| TEST-PETMODEL-06 — Aura Dragon | Spawn an equipped Aura Dragon | Dragon silhouette, wings, horns, tail, and cyan/gold Legendary details are readable |
+| TEST-PETMODEL-07 — Three-pet formation | Equip three visually different pets | Three distinct models appear without overlaps and follow smoothing works |
+| TEST-PETMODEL-08 — Aura readability | Inspect every rarity in motion | Each pet remains readable; no particle cloud obscures more than a small portion of it |
+| TEST-PETMODEL-09 — Mobile performance | Use a phone viewport with three Epic/Legendary effects where possible | No severe FPS degradation, uncontrolled particle buildup, or duplicated emitters |
+| TEST-PETMODEL-10 — Multiplayer | Run two players with three pets each | Each owner gets the correct models, no cross-owner clones occur, and performance remains acceptable |
+| TEST-PETMODEL-11 — Respawn/rejoin | Reset, then leave and rejoin with an equipped set | Exact equipped identities return and no old clones remain |
+| TEST-PETMODEL-12 — Output | Review F9 server and client logs throughout | Zero Critical model/runtime errors, infinite yields, or repeated model warnings |
+
 ## B4R Director Runtime Tests
 
 Use a Studio place containing the repaired six models under `ServerStorage/PetModels`. During play, runtime clones must be under `Workspace/AuralitPetRuntime/Player_<UserId>` and must never appear under `ServerStorage/PetModels` as modifications.

@@ -15,6 +15,7 @@ local PetRuntimeService = {}
 type RuntimePet = {
 	Model: Model,
 	Slot: number,
+	BottomLift: number,
 	CurrentCFrame: CFrame?,
 }
 
@@ -37,9 +38,9 @@ local BOB_HEIGHT = 0.35
 local BOB_SPEED = 3.5
 local PARK_CFRAME = CFrame.new(0, -10_000, 0)
 local FORMATION_OFFSETS = table.freeze({
-	Vector3.new(0, -1.15, 4.75),
-	Vector3.new(-3, -1.15, 6.25),
-	Vector3.new(3, -1.15, 6.25),
+	Vector3.new(0, -2.35, 4.75),
+	Vector3.new(-3, -2.35, 6.25),
+	Vector3.new(3, -2.35, 6.25),
 })
 
 local started = false
@@ -179,6 +180,21 @@ local function createPetModel(player: Player, uid: string, definition: any): Mod
 	return model
 end
 
+local function getBottomLift(model: Model, petId: string): number
+	local ok, boundsCFrame, boundsSize = pcall(model.GetBoundingBox, model)
+	if not ok then
+		warnOnce("bounds-" .. petId, "Could not measure model bounds for " .. petId .. ".")
+		return 1
+	end
+
+	local lift = model:GetPivot().Position.Y - (boundsCFrame.Position.Y - boundsSize.Y * 0.5)
+	if lift ~= lift or lift == math.huge or lift == -math.huge then
+		warnOnce("bounds-finite-" .. petId, "Model bounds are not finite for " .. petId .. ".")
+		return 1
+	end
+	return math.clamp(lift, 0, 6)
+end
+
 local function buildDesiredPets(state: any): {[string]: DesiredPet}
 	local desired: {[string]: DesiredPet} = {}
 	if type(state) ~= "table" or type(state.Owned) ~= "table" or type(state.Equipped) ~= "table" then
@@ -235,12 +251,14 @@ local function syncPlayer(player: Player, state: any)
 		if not runtime.Pets[uid] then
 			local model = createPetModel(player, uid, wanted.Definition)
 			if model then
+				local bottomLift = getBottomLift(model, wanted.Definition.Id)
 				model:SetAttribute("FormationSlot", wanted.Slot)
 				model:PivotTo(PARK_CFRAME)
 				model.Parent = runtime.Folder
 				runtime.Pets[uid] = {
 					Model = model,
 					Slot = wanted.Slot,
+					BottomLift = bottomLift,
 					CurrentCFrame = nil,
 				}
 			end
@@ -264,7 +282,7 @@ end
 local function targetCFrame(rootPart: BasePart, runtimePet: RuntimePet, now: number): CFrame
 	local offset = FORMATION_OFFSETS[runtimePet.Slot] or FORMATION_OFFSETS[1]
 	local bob = math.sin(now * BOB_SPEED + runtimePet.Slot * 1.7) * BOB_HEIGHT
-	return rootPart.CFrame * CFrame.new(offset.X, offset.Y + bob, offset.Z)
+	return rootPart.CFrame * CFrame.new(offset.X, offset.Y + runtimePet.BottomLift + bob, offset.Z)
 end
 
 local function updatePets(deltaTime: number)

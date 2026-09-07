@@ -25,8 +25,11 @@
     - [x] Synchronize per-player runtime clones from authoritative equipped snapshots
     - [x] Implement collision-free three-slot formation and one shared smooth-follow loop
     - [x] Handle equip changes, purchases, respawns, rejoins, departures, and malformed models
-    - [x] Repair and statically validate all six ServerStorage pet-model XML sources
+    - [x] Rebuild all six ServerStorage pet characters from approved references using only native parts and effects
+    - [x] Remove the destructive placeholder builder and add exact mapping, metadata, geometry, safety, and VFX validation
+    - [x] Align varied character bounds without changing the authoritative shared-loop follow architecture
     - [ ] Complete TEST-B4R-01 through TEST-B4R-10 in Roblox Studio
+    - [ ] Complete TEST-PETMODEL-01 through TEST-PETMODEL-12 in Roblox Studio
   - [ ] Step B5: Cosmetics System
   - [ ] Step B6: Battle Pass System
   - [ ] Step B7: Daily Login Rewards
