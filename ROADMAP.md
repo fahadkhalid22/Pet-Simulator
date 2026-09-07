@@ -7,10 +7,10 @@
   - [x] Step A4: Animation & VFX References
 - [ ] Phase B: Technical Foundation
   - [x] Step B1: Repo & Tooling Confirmation
-  - [ ] Step B2: Player Data System
+  - [x] Step B2: Player Data System
     - [x] Implement versioned schema, validation, session locking, retries, autosave, and shutdown saves
-    - [ ] Verify new-player defaults and leave/rejoin persistence in Roblox Studio
-    - [ ] Verify two-player data isolation in a Studio test server
+    - [x] Verify new-player defaults and leave/rejoin persistence in Roblox Studio
+    - [x] Verify two-player data isolation in a Studio test server
   - [ ] Step B3: Pet Acquisition & Passive Earning
   - [ ] Step B4: UI Implementation
   - [ ] Step B5: Cosmetics System
