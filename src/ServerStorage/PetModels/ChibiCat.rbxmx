@@ -20,8 +20,8 @@
 					<string name="Name">SilverDust</string><bool name="Enabled">true</bool>
 					<ColorSequence name="Color">0 0.898039 0.898039 0.898039 0 1 0.898039 0.898039 0.898039 0 </ColorSequence>
 					<NumberRange name="Lifetime">0.8 1.1 </NumberRange><float name="Rate">8</float>
-					<NumberSequence name="Size">0 0.13 0 1 0 0 </NumberSequence>
-					<NumberSequence name="Transparency">0 0.25 0 1 1 0 </NumberSequence>
+					<NumberSequence name="Size">0 0.045 0 1 0 0 </NumberSequence>
+					<NumberSequence name="Transparency">0 0.68 0 1 1 0 </NumberSequence>
 					<NumberRange name="Speed">0.25 0.65 </NumberRange><Vector2 name="SpreadAngle"><X>35</X><Y>35</Y></Vector2>
 					<float name="LightEmission">0.4</float><float name="LightInfluence">0</float>
 				</Properties>
