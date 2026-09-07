@@ -12,6 +12,10 @@
     - [x] Verify new-player defaults and leave/rejoin persistence in Roblox Studio
     - [x] Verify two-player data isolation in a Studio test server
   - [ ] Step B3: Pet Acquisition & Passive Earning
+    - [x] Implement centralized pet catalog and purchase prices
+    - [x] Implement authoritative purchase, grant, equip, and unequip actions
+    - [x] Implement aggregated passive income and secured pet remotes
+    - [ ] Verify acquisition, equipment limits, income rates, persistence, and remote rejection in Studio
   - [ ] Step B4: UI Implementation
   - [ ] Step B5: Cosmetics System
   - [ ] Step B6: Battle Pass System

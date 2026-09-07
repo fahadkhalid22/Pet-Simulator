@@ -23,6 +23,11 @@ local GameConfig = {
 		StarterPetId = "FluffDog",
 		MaxEquipped = 3,
 		MaxOwned = 500,
+		PurchaseAutoEquip = true,
+		PassiveIncomeIntervalSeconds = 1,
+		MaxPassiveCatchupSeconds = 5,
+		RemoteWindowSeconds = 1,
+		MaxRemoteRequestsPerWindow = 8,
 	}),
 
 	Cosmetics = table.freeze({
