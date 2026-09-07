@@ -61,3 +61,41 @@ ACTION: Implemented a code-native, server-backed, mobile-responsive Phase 1 inte
 TEST: Static source and diff checks completed; four focused Studio runtime checks remain.
 RESULT: STATICALLY VERIFIED / DIRECTOR RUNTIME TEST REQUIRED
 ```
+
+## B4R Director Runtime Tests
+
+Use a Studio place containing the repaired six models under `ServerStorage/PetModels`. During play, runtime clones must be under `Workspace/AuralitPetRuntime/Player_<UserId>` and must never appear under `ServerStorage/PetModels` as modifications.
+
+| Test | Action | Pass condition |
+|---|---|---|
+| TEST-B4R-01 | Join with one equipped pet | Exactly one matching model appears and follows the player |
+| TEST-B4R-02 | Equip three owned pets | Exactly three models occupy distinct deterministic formation slots behind/beside the player |
+| TEST-B4R-03 | Unequip the middle equipped pet | Only the model with that pet UID is removed and the remaining pets reconcile slots |
+| TEST-B4R-04 | Re-equip the removed pet | Its model returns once, follows correctly, and has the expected `PetUid` |
+| TEST-B4R-05 | Purchase a pet while an equip slot is free | The auto-equipped purchase appears without rejoining or manually refreshing |
+| TEST-B4R-06 | Reset or kill the character, then respawn | Old runtime pets are removed and the authoritative equipped set returns for the new character |
+| TEST-B4R-07 | Leave and rejoin after saving equipped pets | The saved equipped set is restored visually after data load |
+| TEST-B4R-08 | Run a two-player server | Each player has a separate owner folder and only follows their own models |
+| TEST-B4R-09 | Repeat equip, unequip, purchase, death, and rejoin transitions | Runtime model count always equals equipped count, with one unique model per equipped UID |
+| TEST-B4R-10 | Review Output throughout all tests | No critical errors, infinite yields, physics warnings, or runtime-service error spam occur |
+
+| ID | File/System | Purpose | Status | Problem | Severity | Fix | Verification |
+|---|---|---|---|---|---|---|---|
+| B4R-01 | PetService runtime signal | Publish authoritative equipped snapshots to server dependents | STATICALLY VERIFIED | Equipped state affected income but had no server-internal visual synchronization path | HIGH | Added a server-only state signal fired after data load and every successful pet mutation | Source and dependency order reviewed; Studio verification required |
+| B4R-02 | PetRuntimeService spawning | Materialize only equipped pets without trusting clients | STATICALLY VERIFIED | No runtime pet models were spawned | HIGH | Added trusted PetConfig model lookup, cloned-model validation, per-player Workspace folders, UID deduplication, and immediate reconciliation | TEST-B4R-01 through TEST-B4R-05, TEST-B4R-08, and TEST-B4R-09 required |
+| B4R-03 | PetRuntimeService follow/lifecycle | Follow owners safely through movement and character lifecycle | STATICALLY VERIFIED | Equipped pets had no formation, movement, respawn, or cleanup behavior | HIGH | Added one shared Heartbeat loop, deterministic three-slot offsets, exponential smoothing, bobbing, anchored collision-free parts, respawn resync, and leave cleanup | TEST-B4R-02, TEST-B4R-06 through TEST-B4R-08, and TEST-B4R-10 required |
+| B4R-04 | ServerStorage pet model sources | Provide valid cloneable source assets | STATICALLY VERIFIED | All six `.rbxmx` files had unquoted XML attributes and were not reliably importable | HIGH | Restored valid XML attribute quoting without changing pet identities or source behavior | All six files parse as XML; fresh Studio import required |
+
+## B4R Root-Cause Report
+
+```text
+ITEM: B4.5 Pet Runtime Visual & Follow System
+PROBLEM: Equipped pets persisted and generated income but had no world representation.
+ROOT CAUSE: B3 implemented authoritative pet state, but no server runtime consumed that state to clone and move equipped models.
+FILES AFFECTED: PetService.lua, PetRuntimeService.lua, DataBootstrap.server.lua, ServerStorage/PetModels/*.rbxmx
+DEPENDENCIES: B3 Director verified; B4 UI available; ServerStorage pet models required
+SEVERITY: HIGH
+ACTION: Added authoritative runtime reconciliation, isolated spawning, shared smooth following, lifecycle cleanup, and valid source XML.
+TEST: Static source review, XML parsing, catalog/model checks, and diff checks completed; Director Studio tests remain.
+RESULT: STATICALLY VERIFIED / DIRECTOR RUNTIME TEST REQUIRED
+```

@@ -10,6 +10,9 @@ local PetConfig = require(Shared:WaitForChild("PetConfig"))
 local DataService = require(script.Parent:WaitForChild("DataService"))
 
 local PetService = {}
+local authoritativeStateChanged = Instance.new("BindableEvent")
+
+PetService.StateChanged = authoritativeStateChanged.Event
 
 local MAX_IDENTIFIER_LENGTH = 64
 local started = false
@@ -104,6 +107,7 @@ local function syncPlayerState(player: Player): {[string]: any}?
 	if remote then
 		remote:FireClient(player, state)
 	end
+	authoritativeStateChanged:Fire(player, state)
 	return state
 end
 

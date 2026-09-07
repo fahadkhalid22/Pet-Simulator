@@ -15,6 +15,6 @@ The project currently uses a manual Roblox Studio sync workflow. Mirror the repo
 
 ## Current status
 
-Phase B2 player data and Phase B3 pet acquisition/passive earning are Director verified. Phase B4 now has a responsive code-native HUD, pet shop, and inventory implementation; B4 Roblox Studio verification is still required. See `ROADMAP.md` and `REPAIR_LOG.md`.
+Phase B2 player data and Phase B3 pet acquisition/passive earning are Director verified. Phase B4 has a responsive code-native HUD, pet shop, and inventory. A server-authoritative pet runtime/follow dependency is now statically implemented between B4 and B5; its focused Roblox Studio verification is still required. See `ROADMAP.md` and `REPAIR_LOG.md`.
 
 For Studio persistence testing, publish a private test place and enable **Game Settings > Security > Enable Studio Access to API Services**. Do not enable Studio API access against a live production place with valuable player data.

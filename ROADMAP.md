@@ -21,6 +21,12 @@
     - [x] Implement responsive pet shop with prices, affordability state, and purchase feedback
     - [x] Implement responsive owned-pet inventory with equipped state and equip controls
     - [ ] Verify HUD, shop, inventory, touch targets, and phone/tablet layouts in Studio
+  - [ ] Step B4.5: Pet Runtime Visual & Follow System
+    - [x] Synchronize per-player runtime clones from authoritative equipped snapshots
+    - [x] Implement collision-free three-slot formation and one shared smooth-follow loop
+    - [x] Handle equip changes, purchases, respawns, rejoins, departures, and malformed models
+    - [x] Repair and statically validate all six ServerStorage pet-model XML sources
+    - [ ] Complete TEST-B4R-01 through TEST-B4R-10 in Roblox Studio
   - [ ] Step B5: Cosmetics System
   - [ ] Step B6: Battle Pass System
   - [ ] Step B7: Daily Login Rewards
