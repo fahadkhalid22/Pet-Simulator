@@ -84,16 +84,27 @@ TEST: Static validator and repository checks completed; TEST-PETMODEL-01 through
 RESULT: STATICALLY VERIFIED / DIRECTOR STUDIO TEST REQUIRED
 ```
 
+## B4M Final v3 Mesh Candidate Batch
+
+| ID | File/System | Purpose | Status | Problem | Severity | Fix | Verification |
+|---|---|---|---|---|---|---|---|
+| B4M-01 | Blender mesh pipeline | Produce mobile-ready polygon characters from the six approved references | STATICALLY VERIFIED | Native Roblox assemblies could not match the approved silhouettes closely enough | HIGH | Added deterministic Blender 5.2 generators, six GLBs, and four-view previews; preserved the Director-approved FrostBunny geometry | Exact Blender commands passed for the five new candidates; offline GLB validation passed 6/6 |
+| B4M-02 | Imported hierarchy contract | Prevent further Studio-name drift and unsafe candidate acceptance | STATICALLY VERIFIED | Imported names had previously been patched reactively | HIGH | Added exact generator/GLB/helper name parity, exact mesh counts, Body-only root, direct-child, material, transform, bounds, and metadata checks | `validate-pet-glbs.py` reports 31/31/31, 31/31/31, 31/31/31, 31/31/31, 36/36/36, and 46/46/46 parity |
+| B4M-03 | Roblox post-import setup | Configure safe runtime-ready review candidates without modifying source geometry | STATICALLY VERIFIED | Imported GLBs need PrimaryPart, attributes, physics flags, and Roblox-side rarity VFX | HIGH | Kept the closed FrostBunny helper and added a shared closed-contract helper for the other five candidates | Static helper whitelists match every GLB; Studio import/configuration remains required |
+| B4M-04 | Mesh-aware committed-model validation | Accept final MeshPart/Attachment models without allowing arbitrary content | STATICALLY VERIFIED | The repository validator was centered on legacy Part/WedgePart assemblies | HIGH | Added exact per-character MeshPart, attachment, VFX, version, hierarchy, physics, and mesh-ID contracts while retaining legacy checks | PowerShell validator parses and enforces both contracts; current user-owned intermediate FrostBunny source remains intentionally untouched |
+
+The GLBs and previews are local-validation candidates only. B4.5 remains **AWAITING DIRECTOR STUDIO VERIFICATION**; no character in this batch is marked Director verified, and B5 has not started.
+
 ## B4P Reference Checklist
 
-| Pet | Reference-led native character treatment | Required identity cues present | VFX treatment |
+| Pet | Reference-led v3 mesh treatment | Required identity cues present | VFX treatment |
 |---|---|---|---|
 | Fluff Dog | Charcoal, white, and caramel fluffy puppy | Floppy ears, facial blaze, layered amber eyes, muzzle, paws, visible tipped tail | Low-rate `SilverDust` |
 | Chibi Cat | Black-and-white tuxedo cat | Triangular pink-inner ears, green eyes, feline muzzle, white face/chest, long raised tail | Low-rate `SilverDust` |
 | Frost Bunny | Upright white-and-ice rabbit | Two long pink-inner ears, coral nose, standing limbs, round rabbit tail | `CyanMist` plus sparse `SnowSpecks` |
 | Storm Owl | Snowy round owl | Paired eye discs, amber beak and feet, raised layered wings, tail feathers | `VioletSparkles` plus restrained local aura light |
 | Frost Fox | Cyan arctic fox | Oversized ears, fox muzzle, white chest ruff, large tiered plume tail | `VioletSparkles`, sparse `FrostSpecks`, and restrained local aura light |
-| Aura Dragon | Chibi dragon adaptation of the cyan/gold Overseer reference | Snout, four horns, clawed feet, wings, long tail, chest and forehead runes | `GoldShimmer`, `CyanSoulfire`, and restrained Legendary aura light |
+| Aura Dragon | Black/cyan armored humanoid sorcerer-dragon | Masked cyan face, helmet dome and twin pillars, rune-trimmed robes, block limbs, and pronged soul-fire staff | `GoldShimmer`, `CyanSoulfire`, and restrained Legendary aura light |
 
 ## B4P Director Studio Tests
 
@@ -104,7 +115,7 @@ RESULT: STATICALLY VERIFIED / DIRECTOR STUDIO TEST REQUIRED
 | TEST-PETMODEL-03 — Frost Bunny | Spawn an equipped Frost Bunny | Rabbit identity, both ears, and nose are obvious; it does not look like a sphere-only placeholder |
 | TEST-PETMODEL-04 — Storm Owl | Spawn an equipped Storm Owl | Owl identity, both wings, and beak are obvious |
 | TEST-PETMODEL-05 — Frost Fox | Spawn an equipped Frost Fox | Fox identity, cyan body, large ears, white plume tail, and chest ruff are obvious |
-| TEST-PETMODEL-06 — Aura Dragon | Spawn an equipped Aura Dragon | Dragon silhouette, wings, horns, tail, and cyan/gold Legendary details are readable |
+| TEST-PETMODEL-06 — Aura Dragon | Spawn an equipped Aura Dragon | The black/cyan armored humanoid mage, mask, helmet pillars, rune trim, and pronged soul-fire staff are immediately readable |
 | TEST-PETMODEL-07 — Three-pet formation | Equip three visually different pets | Three distinct models appear without overlaps and follow smoothing works |
 | TEST-PETMODEL-08 — Aura readability | Inspect every rarity in motion | Each pet remains readable; no particle cloud obscures more than a small portion of it |
 | TEST-PETMODEL-09 — Mobile performance | Use a phone viewport with three Epic/Legendary effects where possible | No severe FPS degradation, uncontrolled particle buildup, or duplicated emitters |
