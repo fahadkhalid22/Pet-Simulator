@@ -28,7 +28,7 @@
     - [x] Build all six reference-led v3 polygon-mesh candidates, Blender generators, GLBs, and four-view previews
     - [x] Remove the destructive placeholder builder and add exact mapping, metadata, geometry, safety, hierarchy, and VFX validation
     - [x] Align varied character bounds without changing the authoritative shared-loop follow architecture
-    - [x] Prepare non-destructive Studio post-import configuration with exact per-character mesh whitelists
+    - [x] Harden one non-destructive Studio importer for all six exact contracts and deterministic `_Mesh`/`_Node` variants
     - [ ] Import/configure each v3 GLB and replace its legacy ServerStorage model only after candidate inspection
     - [ ] Complete TEST-B4R-01 through TEST-B4R-10 in Roblox Studio
     - [ ] Complete TEST-PETMODEL-01 through TEST-PETMODEL-12 in Roblox Studio
