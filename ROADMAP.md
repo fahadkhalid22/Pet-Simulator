@@ -23,15 +23,17 @@
     - [ ] Verify HUD, shop, inventory, touch targets, and phone/tablet layouts in Studio
   - [ ] Step B4.5: Pet Runtime Visual & Follow System
     - [x] Synchronize per-player runtime clones from authoritative equipped snapshots
-    - [x] Implement collision-free three-slot formation and one shared smooth-follow loop
+    - [x] Implement collision-free three-slot formation with one shared client-side smooth-follow/animation loop
     - [x] Handle equip changes, purchases, respawns, rejoins, departures, and malformed models
     - [x] Build all six reference-led v3 polygon-mesh candidates, Blender generators, GLBs, and four-view previews
     - [x] Remove the destructive placeholder builder and add exact mapping, metadata, geometry, safety, hierarchy, and VFX validation
     - [x] Align varied character bounds without changing the authoritative shared-loop follow architecture
     - [x] Harden one source-safe Studio importer for all six exact contracts and deterministic `_Mesh`/`_Node` variants
     - [x] Validate Studio's flat MeshPart rig wrapper, exclude `RootPart` from visual bounds, and remove only recognized importer support after validation
-    - [ ] Import/configure each v3 GLB and replace its legacy ServerStorage model only after candidate inspection
-    - [ ] Complete TEST-B4R-01 through TEST-B4R-10 in Roblox Studio
+    - [x] Restore exact GLB-derived material colors across all 206 canonical v3 MeshParts and validate source parity
+    - [x] Add bounds-derived terrain grounding plus restrained Idle/Move/Hover procedural motion for all six species
+    - [x] Import/configure all six v3 GLBs as validated ServerStorage source models
+    - [ ] Complete TEST-B4R-01 through TEST-B4R-17 in Roblox Studio
     - [ ] Complete TEST-PETMODEL-01 through TEST-PETMODEL-12 in Roblox Studio
   - [ ] Step B5: Cosmetics System
   - [ ] Step B6: Battle Pass System

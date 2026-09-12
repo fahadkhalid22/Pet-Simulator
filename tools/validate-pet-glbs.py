@@ -77,6 +77,30 @@ def load_glb(path: Path) -> dict:
     return json.loads(payload[20:20 + chunk_length])
 
 
+def linear_to_srgb8(value: float) -> int:
+    assert math.isfinite(value) and 0.0 <= value <= 1.0, f"Invalid linear color channel {value!r}"
+    srgb = 12.92 * value if value <= 0.0031308 else 1.055 * value ** (1.0 / 2.4) - 0.055
+    return round(255.0 * srgb)
+
+
+def glb_visual_contract(document: dict) -> dict[str, dict]:
+    visuals = {}
+    materials = document.get("materials", [])
+    for node in document.get("nodes", []):
+        if "mesh" not in node:
+            continue
+        primitives = document["meshes"][node["mesh"]].get("primitives", [])
+        assert len(primitives) == 1 and "material" in primitives[0], f"{node.get('name')} has no unique material"
+        material = materials[primitives[0]["material"]]
+        factor = tuple(float(value) for value in material["pbrMetallicRoughness"].get("baseColorFactor", (1, 1, 1, 1))[:3])
+        visuals[node["name"]] = {
+            "material": material.get("name"),
+            "base_color_factor": factor,
+            "color": tuple(linear_to_srgb8(value) for value in factor),
+        }
+    return visuals
+
+
 def load_helper_text() -> str:
     return (ROOT / "tools" / "roblox" / "configure_pet_import.lua").read_text(encoding="utf-8")
 
@@ -97,6 +121,18 @@ def load_helper_contract(text: str, pet_id: str) -> dict:
     block = load_helper_pet_block(text, pet_id)
     mesh_block = block.split("meshNames = {", 1)[1].split("\n\t\t},", 1)[0]
     names = set(re.findall(r'"([A-Za-z][A-Za-z0-9]*)"', mesh_block))
+    visual_block = block.split("visuals = {", 1)[1].split("\n\t\t},", 1)[0]
+    visual_pattern = re.compile(
+        r'([A-Za-z][A-Za-z0-9]*)\s*=\s*\{material = "([^"]+)", '
+        r'baseColorFactor = Vector3\.new\(([^)]+)\), color = Color3\.fromRGB\((\d+), (\d+), (\d+)\)\}'
+    )
+    visuals = {}
+    for name, material, factor_text, red, green, blue in visual_pattern.findall(visual_block):
+        visuals[name] = {
+            "material": material,
+            "base_color_factor": tuple(float(value.strip()) for value in factor_text.split(",")),
+            "color": (int(red), int(green), int(blue)),
+        }
     aliases = {}
     if "aliases = {" in block:
         alias_block = block.split("aliases = {", 1)[1].split("\n\t\t},", 1)[0]
@@ -114,6 +150,7 @@ def load_helper_contract(text: str, pet_id: str) -> dict:
     bounds_max = tuple(float(value.strip()) for value in bounds_match.group(2).split(","))
     return {
         "names": names,
+        "visuals": visuals,
         "aliases": aliases,
         "effects": effects,
         "metadata": metadata_match.groups()[:6],
@@ -337,9 +374,13 @@ def validate_helper_safety(text: str) -> None:
     assert "GetBoundingBox" not in text, "Helper still uses importer-support-inflated model bounds"
     forbidden_visual_mutations = (
         "meshPart.CFrame =", "meshPart.Size =", "meshPart.MeshId =", "meshPart.TextureID =",
-        "meshPart.Color =", "meshPart.Material =", "meshPart.MaterialVariant =", "meshPart.Transparency =",
+        "meshPart.Material =", "meshPart.MaterialVariant =", "meshPart.Transparency =",
     )
     assert not any(token in stage_b for token in forbidden_visual_mutations), "Stage B changes visible MeshPart data"
+    assert stage_b.count("meshPart.Color = spec.visuals[canonicalName].color") == 1, (
+        "Stage B must apply only the authoritative canonical MeshPart color"
+    )
+    assert "meshPart.Color == spec.visuals[meshPart.Name].color" in stage_b, "Stage B does not verify applied colors"
     for required_text in (
         "[Auralit Pet Import Validation FAILED]", "Unknown MeshParts", "Missing canonical components",
         "Duplicate canonical components", "Importer support problems", "Wrong classes", "Hierarchy problems",
@@ -427,6 +468,16 @@ def validate_pet(pet_id: str, helper_text: str) -> None:
     helper = load_helper_contract(helper_text, pet_id)
     assert helper["names"] == expected_names, f"{pet_id} Studio helper canonical names differ from its GLB contract"
     assert helper["mesh_count"] == len(expected_names), f"{pet_id} helper MeshPart count differs"
+    glb_visuals = glb_visual_contract(document)
+    assert set(helper["visuals"]) == expected_names, f"{pet_id} helper visual names differ from its GLB contract"
+    for component_name, glb_visual in glb_visuals.items():
+        helper_visual = helper["visuals"][component_name]
+        assert helper_visual["material"] == glb_visual["material"], f"{pet_id} {component_name} material differs"
+        assert helper_visual["color"] == glb_visual["color"], f"{pet_id} {component_name} Roblox color differs"
+        assert all(
+            abs(helper_value - glb_value) <= 1e-8
+            for helper_value, glb_value in zip(helper_visual["base_color_factor"], glb_visual["base_color_factor"])
+        ), f"{pet_id} {component_name} baseColorFactor differs"
     assert helper["aliases"] == STUDIO_ALIASES.get(pet_id, {}), f"{pet_id} helper aliases differ from the approved set"
     assert helper["effects"] == VFX[pet_id], f"{pet_id} helper VFX contract differs"
     helper_pet_id, helper_pet_name, helper_rarity, helper_rate, helper_version, helper_axis = helper["metadata"]
@@ -474,7 +525,7 @@ def validate_pet(pet_id: str, helper_text: str) -> None:
         f"{dimensions[0]:.3f} x {dimensions[1]:.3f} x {dimensions[2]:.3f}, "
         f"{len(material_names)} materials, generator/node/mesh/helper/PS names "
         f"{len(expected_names)}/{len(names)}/{len(mesh_names)}/{len(helper['names'])}/{len(expected_names)}; "
-        "flat Studio importer profile and strict negative cases passed"
+        f"{len(helper['visuals'])} exact GLB material/color mappings; flat Studio importer profile passed"
     )
 
 
@@ -513,6 +564,9 @@ def main() -> None:
     assert {path.name for path in MODEL_DIR.glob("*_preview.png")} == expected_previews, "Preview directory does not have exact six-pet parity"
     for pet_id in SPECS:
         validate_pet(pet_id, helper_text)
+    visual_total = sum(len(load_helper_contract(helper_text, pet_id)["visuals"]) for pet_id in SPECS)
+    assert visual_total == 206, f"Expected 206 canonical visual mappings, found {visual_total}"
+    print(f"[PASS] Exact GLB material/baseColorFactor/Roblox RGB parity: {visual_total}/206 components")
     print("[PASS] Canonical-name parity, exact MeshPart counts, metadata, VFX, bounds, and hierarchy: all six pets")
     print("[PASS] _Mesh, _Node, and _Node_Mesh normalization: every canonical component across all six pets")
     print("[PASS] Duplicate detection, unknown-name rejection, missing-name rejection, and wrong-count rejection: all six pets")

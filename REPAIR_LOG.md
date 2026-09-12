@@ -67,7 +67,7 @@ RESULT: STATICALLY VERIFIED / DIRECTOR RUNTIME TEST REQUIRED
 | B4P-01 | Pet character source models | Replace generic placeholder geometry with the six approved character identities | STATICALLY VERIFIED | The previous sources were minimal Body/Head primitives and did not represent the reference roster | HIGH | Rebuilt all six as detailed Roblox-native assemblies with species-specific silhouettes and exact PetConfig names | Automated 6/6/6 parity, XML, geometry, class, metadata, and naming checks passed; Studio visual review required |
 | B4P-02 | Pet metadata and orientation | Make imported models deterministic and inspectable | STATICALLY VERIFIED | Source models lacked a complete shared authoring contract | HIGH | Set `Body` as PrimaryPart and added exact identity, rarity, rate, semantic version, placeholder state, and `-Z` forward attributes | `validate-pet-models.ps1` passed all six models |
 | B4P-03 | Pet rarity VFX | Communicate rarity without external assets or obscuring geometry | STATICALLY VERIFIED | The old placeholders had no restrained per-rarity presentation | MEDIUM | Added texture-free native particles and local lights with capped aggregate rates | VFX node names, missing Texture properties, and rate caps validated; Studio readability/performance tests required |
-| B4P-04 | PetRuntimeService grounding | Keep differently sized models aligned to the world while preserving B4.5 authority and follow behavior | STATICALLY VERIFIED | A fixed pivot offset would leave rebuilt pets floating or clipping | HIGH | Added guarded bounding-box bottom lift to the existing shared Heartbeat target calculation | Source reviewed; formation, respawn, rejoin, and multiplayer Studio tests required |
+| B4P-04 | Pet runtime grounding | Keep differently sized models aligned to world surfaces while preserving B4.5 authority | STATICALLY VERIFIED | Root-relative Y plus a fixed bob left pets suspended above floors and terrain | HIGH | Retained guarded bounding-box bottom offsets and applied them to throttled client raycast hits with exponential follow damping | Baseplate, slope, platform, respawn, and multiplayer Studio tests required |
 | B4P-05 | Pet model authoring pipeline | Prevent Play mode from replacing committed character sources | STATICALLY VERIFIED | `BuildPetModels.server.lua` destroyed canonical models and regenerated the rejected minimal placeholders | CRITICAL | Removed the startup builder; committed `.rbxmx` files are now the canonical, explicitly imported sources | Validator passes and Studio replacement-sync procedure documented |
 
 ## B4P Root-Cause Report
@@ -94,7 +94,17 @@ RESULT: STATICALLY VERIFIED / DIRECTOR STUDIO TEST REQUIRED
 | B4M-04 | Mesh-aware committed-model validation | Accept final MeshPart/Attachment models without allowing arbitrary content | STATICALLY VERIFIED | The repository validator was centered on legacy Part/WedgePart assemblies | HIGH | Added exact per-character MeshPart, attachment, VFX, version, hierarchy, physics, and mesh-ID contracts while retaining legacy checks | PowerShell validator parses and enforces both contracts; current user-owned intermediate FrostBunny source remains intentionally untouched |
 | B4M-05 | Roblox 3D Importer reconciliation | Accept the importer-generated rig wrapper without treating it as visible pet geometry | STATICALLY VERIFIED | Studio flattens visual MeshParts and adds `RootPart`, `AnimationController`, `InitialPoses`/CFrameValues, and per-mesh Motor6Ds; the support root inflated whole-model bounds | HIGH | Stage A now accepts only the exact deterministic importer profile, validates all relationships, and measures canonical MeshParts only; Stage B freezes the visuals, removes only recognized support objects, and preserves visible mesh data | All-six canonical/flat `_Mesh` fixtures pass; random Part, unknown Folder, malformed Motor6D, forbidden object, missing, and duplicate fixtures fail closed; Studio verification remains required |
 
-The GLBs and previews are local-validation candidates only. B4.5 remains **AWAITING DIRECTOR STUDIO VERIFICATION**; no character in this batch is marked Director verified, and B5 has not started.
+The approved GLBs remain the visual source of truth for the six configured v3 ServerStorage exports. B4.5 remains **AWAITING DIRECTOR STUDIO VERIFICATION**; no character in this batch is marked Director verified, and B5 has not started.
+
+## B4Q Final v3 Visual + Locomotion Quality Pass
+
+| ID | File/System | Status | Root cause | Repair | Verification |
+|---|---|---|---|---|---|
+| B4Q-01 | GLB/Studio color pipeline | STATICALLY VERIFIED | Studio imports used one default MeshPart color while approved GLBs encoded appearance in material `baseColorFactor` values | Added exact linear-to-sRGB contracts for all 206 canonical components, Stage B color application, source synchronization, and fail-closed color parity checks | GLB and `.rbxmx` validators pass 206/206 exact colors |
+| B4Q-02 | Terrain grounding | STATICALLY VERIFIED | The old target used HumanoidRootPart-relative Y and a fixed bob rather than the surface below each formation position | Added throttled downward raycasts excluding characters/runtime/transient effects, bounds-derived bottom offsets, and damped target interpolation | Static runtime contract passes; TEST-B4R-02/03 required |
+| B4Q-03 | Procedural locomotion | STATICALLY VERIFIED | One server `PivotTo` moved every anchored MeshPart rigidly as a statue | Cached canonical local poses once and added one client loop with smooth Idle/Move/Hover states, alternating limbs, and restrained head/ear/tail/wing/staff group motion | Static runtime contract passes; TEST-B4R-04 through TEST-B4R-10 required |
+
+B4.5 remains **AWAITING DIRECTOR VERIFICATION** pending TEST-B4R-01 through TEST-B4R-17. B5 has not started.
 
 ## B4P Reference Checklist
 
@@ -130,22 +140,29 @@ Use a Studio place containing the repaired six models under `ServerStorage/PetMo
 
 | Test | Action | Pass condition |
 |---|---|---|
-| TEST-B4R-01 | Join with one equipped pet | Exactly one matching model appears and follows the player |
-| TEST-B4R-02 | Equip three owned pets | Exactly three models occupy distinct deterministic formation slots behind/beside the player |
-| TEST-B4R-03 | Unequip the middle equipped pet | Only the model with that pet UID is removed and the remaining pets reconcile slots |
-| TEST-B4R-04 | Re-equip the removed pet | Its model returns once, follows correctly, and has the expected `PetUid` |
-| TEST-B4R-05 | Purchase a pet while an equip slot is free | The auto-equipped purchase appears without rejoining or manually refreshing |
-| TEST-B4R-06 | Reset or kill the character, then respawn | Old runtime pets are removed and the authoritative equipped set returns for the new character |
-| TEST-B4R-07 | Leave and rejoin after saving equipped pets | The saved equipped set is restored visually after data load |
-| TEST-B4R-08 | Run a two-player server | Each player has a separate owner folder and only follows their own models |
-| TEST-B4R-09 | Repeat equip, unequip, purchase, death, and rejoin transitions | Runtime model count always equals equipped count, with one unique model per equipped UID |
-| TEST-B4R-10 | Review Output throughout all tests | No critical errors, infinite yields, physics warnings, or runtime-service error spam occur |
+| TEST-B4R-01 | Join with one equipped ground pet | Exactly one matching model appears and follows the player |
+| TEST-B4R-02 | Inspect the pet on the Baseplate | Feet/body sit naturally at the surface with no accidental hover |
+| TEST-B4R-03 | Walk onto a raised platform and a slope | Grounded pets adapt smoothly without clipping, floating, or vertical jitter |
+| TEST-B4R-04 | Walk and run with a ground pet | Its Move cycle starts, with restrained alternating limb motion |
+| TEST-B4R-05 | Stop moving | The pet eases back into a subtle Idle pose without snapping |
+| TEST-B4R-06 | Observe dog, cat, bunny, and fox while idle/moving | Head, ear, and tail secondary motion is coherent and restrained where anatomy permits |
+| TEST-B4R-07 | Equip StormOwl and move/stop | It intentionally hovers, gently oscillates, moves its integrated wings, and does not walk |
+| TEST-B4R-08 | Equip AuraDragon and move/stop | It remains ground-based with subtle humanoid stride/body motion and an aligned staff |
+| TEST-B4R-09 | Equip three visually different pets | All three retain stable, non-overlapping deterministic formation slots |
+| TEST-B4R-10 | Make sharp turns and stop/start repeatedly | Acceleration, deceleration, and rotation remain smooth without ordinary teleport jitter |
+| TEST-B4R-11 | Reset or kill the character, then respawn | Old runtime pets are removed and exactly one authoritative equipped set returns |
+| TEST-B4R-12 | Leave and rejoin after saving equipped pets | The saved equipped set is restored visually after data load |
+| TEST-B4R-13 | Run a two-player server | Each player has an isolated owner folder and follows only their own models |
+| TEST-B4R-14 | Walk directly through all equipped pets | No pet collision or physics force pushes either character |
+| TEST-B4R-15 | Review client and server Output throughout | No critical errors, infinite yields, physics warnings, or repeated runtime warnings occur |
+| TEST-B4R-16 | Compare all six runtime pets with approved GLB previews | Canonical components reproduce the approved GLB material colors |
+| TEST-B4R-17 | Inspect every component under neutral Studio lighting | No default-grey component remains except an intentional GLB-authored grey material |
 
 | ID | File/System | Purpose | Status | Problem | Severity | Fix | Verification |
 |---|---|---|---|---|---|---|---|
 | B4R-01 | PetService runtime signal | Publish authoritative equipped snapshots to server dependents | STATICALLY VERIFIED | Equipped state affected income but had no server-internal visual synchronization path | HIGH | Added a server-only state signal fired after data load and every successful pet mutation | Source and dependency order reviewed; Studio verification required |
 | B4R-02 | PetRuntimeService spawning | Materialize only equipped pets without trusting clients | STATICALLY VERIFIED | No runtime pet models were spawned | HIGH | Added trusted PetConfig model lookup, cloned-model validation, per-player Workspace folders, UID deduplication, and immediate reconciliation | TEST-B4R-01 through TEST-B4R-05, TEST-B4R-08, and TEST-B4R-09 required |
-| B4R-03 | PetRuntimeService follow/lifecycle | Follow owners safely through movement and character lifecycle | STATICALLY VERIFIED | Equipped pets had no formation, movement, respawn, or cleanup behavior | HIGH | Added one shared Heartbeat loop, deterministic three-slot offsets, exponential smoothing, bobbing, anchored collision-free parts, respawn resync, and leave cleanup | TEST-B4R-02, TEST-B4R-06 through TEST-B4R-08, and TEST-B4R-10 required |
+| B4R-03 | Pet runtime follow/lifecycle | Follow owners safely through movement and character lifecycle | STATICALLY VERIFIED | Server-side whole-model PivotTo movement made pets rigid and used character-relative height | HIGH | Kept server spawn/lifecycle authority, moved cosmetic motion to one shared client RenderStepped loop, added ground raycasts, cached additive component poses, explicit Idle/Move/Hover states, respawn resync, and leave cleanup | TEST-B4R-01 through TEST-B4R-15 required |
 | B4R-04 | ServerStorage pet model sources | Provide valid cloneable source assets | STATICALLY VERIFIED | All six `.rbxmx` files had unquoted XML attributes and were not reliably importable | HIGH | Restored valid XML attribute quoting without changing pet identities or source behavior | All six files parse as XML; fresh Studio import required |
 
 ## B4R Root-Cause Report

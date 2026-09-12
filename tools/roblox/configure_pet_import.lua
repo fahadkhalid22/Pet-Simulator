@@ -18,6 +18,39 @@ local PET_CONTRACTS = {
 			"Mouth", "LeftArm", "RightArm", "LeftLeg", "RightLeg", "LeftFoot", "RightFoot", "LeftPawPad", "RightPawPad",
 			"LeftToePad1", "LeftToePad2", "LeftToePad3", "RightToePad1", "RightToePad2", "RightToePad3", "Tail",
 		},
+		visuals = {
+			Body = {material = "BunnyWhite", baseColorFactor = Vector3.new(0.975000024, 0.954999983, 0.964999974), color = Color3.fromRGB(252, 250, 251)},
+			Head = {material = "BunnyWhite", baseColorFactor = Vector3.new(0.975000024, 0.954999983, 0.964999974), color = Color3.fromRGB(252, 250, 251)},
+			LeftArm = {material = "BunnyWhite", baseColorFactor = Vector3.new(0.975000024, 0.954999983, 0.964999974), color = Color3.fromRGB(252, 250, 251)},
+			LeftCheek = {material = "CheekPink", baseColorFactor = Vector3.new(1, 0.579999983, 0.660000026), color = Color3.fromRGB(255, 200, 212)},
+			LeftEar = {material = "BunnyWhite", baseColorFactor = Vector3.new(0.975000024, 0.954999983, 0.964999974), color = Color3.fromRGB(252, 250, 251)},
+			LeftEye = {material = "EyeBlack", baseColorFactor = Vector3.new(0.00600000005, 0.00400000019, 0.00600000005), color = Color3.fromRGB(18, 13, 18)},
+			LeftEyeHighlight = {material = "EyeHighlight", baseColorFactor = Vector3.new(1, 1, 1), color = Color3.fromRGB(255, 255, 255)},
+			LeftFoot = {material = "BunnyWhite", baseColorFactor = Vector3.new(0.975000024, 0.954999983, 0.964999974), color = Color3.fromRGB(252, 250, 251)},
+			LeftInnerEar = {material = "InnerEarPink", baseColorFactor = Vector3.new(1, 0.254999995, 0.360000014), color = Color3.fromRGB(255, 138, 162)},
+			LeftLeg = {material = "BunnyWhite", baseColorFactor = Vector3.new(0.975000024, 0.954999983, 0.964999974), color = Color3.fromRGB(252, 250, 251)},
+			LeftMuzzle = {material = "BunnyWhite", baseColorFactor = Vector3.new(0.975000024, 0.954999983, 0.964999974), color = Color3.fromRGB(252, 250, 251)},
+			LeftPawPad = {material = "PawPink", baseColorFactor = Vector3.new(1, 0.310000002, 0.430000007), color = Color3.fromRGB(255, 151, 175)},
+			LeftToePad1 = {material = "PawPink", baseColorFactor = Vector3.new(1, 0.310000002, 0.430000007), color = Color3.fromRGB(255, 151, 175)},
+			LeftToePad2 = {material = "PawPink", baseColorFactor = Vector3.new(1, 0.310000002, 0.430000007), color = Color3.fromRGB(255, 151, 175)},
+			LeftToePad3 = {material = "PawPink", baseColorFactor = Vector3.new(1, 0.310000002, 0.430000007), color = Color3.fromRGB(255, 151, 175)},
+			Mouth = {material = "MouthBlack", baseColorFactor = Vector3.new(0.0250000004, 0.0120000001, 0.0179999992), color = Color3.fromRGB(44, 29, 36)},
+			Nose = {material = "NosePink", baseColorFactor = Vector3.new(1, 0.200000003, 0.300000012), color = Color3.fromRGB(255, 124, 149)},
+			RightArm = {material = "BunnyWhite", baseColorFactor = Vector3.new(0.975000024, 0.954999983, 0.964999974), color = Color3.fromRGB(252, 250, 251)},
+			RightCheek = {material = "CheekPink", baseColorFactor = Vector3.new(1, 0.579999983, 0.660000026), color = Color3.fromRGB(255, 200, 212)},
+			RightEar = {material = "BunnyWhite", baseColorFactor = Vector3.new(0.975000024, 0.954999983, 0.964999974), color = Color3.fromRGB(252, 250, 251)},
+			RightEye = {material = "EyeBlack", baseColorFactor = Vector3.new(0.00600000005, 0.00400000019, 0.00600000005), color = Color3.fromRGB(18, 13, 18)},
+			RightEyeHighlight = {material = "EyeHighlight", baseColorFactor = Vector3.new(1, 1, 1), color = Color3.fromRGB(255, 255, 255)},
+			RightFoot = {material = "BunnyWhite", baseColorFactor = Vector3.new(0.975000024, 0.954999983, 0.964999974), color = Color3.fromRGB(252, 250, 251)},
+			RightInnerEar = {material = "InnerEarPink", baseColorFactor = Vector3.new(1, 0.254999995, 0.360000014), color = Color3.fromRGB(255, 138, 162)},
+			RightLeg = {material = "BunnyWhite", baseColorFactor = Vector3.new(0.975000024, 0.954999983, 0.964999974), color = Color3.fromRGB(252, 250, 251)},
+			RightMuzzle = {material = "BunnyWhite", baseColorFactor = Vector3.new(0.975000024, 0.954999983, 0.964999974), color = Color3.fromRGB(252, 250, 251)},
+			RightPawPad = {material = "PawPink", baseColorFactor = Vector3.new(1, 0.310000002, 0.430000007), color = Color3.fromRGB(255, 151, 175)},
+			RightToePad1 = {material = "PawPink", baseColorFactor = Vector3.new(1, 0.310000002, 0.430000007), color = Color3.fromRGB(255, 151, 175)},
+			RightToePad2 = {material = "PawPink", baseColorFactor = Vector3.new(1, 0.310000002, 0.430000007), color = Color3.fromRGB(255, 151, 175)},
+			RightToePad3 = {material = "PawPink", baseColorFactor = Vector3.new(1, 0.310000002, 0.430000007), color = Color3.fromRGB(255, 151, 175)},
+			Tail = {material = "BunnyWhite", baseColorFactor = Vector3.new(0.975000024, 0.954999983, 0.964999974), color = Color3.fromRGB(252, 250, 251)},
+		},
 		aliases = {
 			LeftEyeShine = "LeftEyeHighlight", RightEyeShine = "RightEyeHighlight",
 			LeftFootPad = "LeftPawPad", RightFootPad = "RightPawPad",
@@ -38,6 +71,39 @@ local PET_CONTRACTS = {
 			"LeftFrontPaw", "RightFrontPaw", "LeftHaunch", "RightHaunch", "LeftToe1", "LeftToe2", "LeftToe3",
 			"RightToe1", "RightToe2", "RightToe3", "Tail",
 		},
+		visuals = {
+			Body = {material = "CatCharcoal", baseColorFactor = Vector3.new(0.104999997, 0.0900000036, 0.100000001), color = Color3.fromRGB(91, 85, 89)},
+			Chest = {material = "CatWhite", baseColorFactor = Vector3.new(0.959999979, 0.939999998, 0.899999976), color = Color3.fromRGB(250, 248, 243)},
+			ForeheadBlaze = {material = "CatWhite", baseColorFactor = Vector3.new(0.959999979, 0.939999998, 0.899999976), color = Color3.fromRGB(250, 248, 243)},
+			Head = {material = "CatCharcoal", baseColorFactor = Vector3.new(0.104999997, 0.0900000036, 0.100000001), color = Color3.fromRGB(91, 85, 89)},
+			LeftEye = {material = "EyeBlack", baseColorFactor = Vector3.new(0.00400000019, 0.00300000003, 0.00400000019), color = Color3.fromRGB(13, 10, 13)},
+			LeftEyeHighlight = {material = "EyeHighlight", baseColorFactor = Vector3.new(1, 1, 1), color = Color3.fromRGB(255, 255, 255)},
+			LeftEyeRing = {material = "EyeLime", baseColorFactor = Vector3.new(0.670000017, 0.930000007, 0.0199999996), color = Color3.fromRGB(214, 247, 39)},
+			LeftFrontLeg = {material = "CatCharcoal", baseColorFactor = Vector3.new(0.104999997, 0.0900000036, 0.100000001), color = Color3.fromRGB(91, 85, 89)},
+			LeftFrontPaw = {material = "CatWhite", baseColorFactor = Vector3.new(0.959999979, 0.939999998, 0.899999976), color = Color3.fromRGB(250, 248, 243)},
+			LeftHaunch = {material = "CatCharcoal", baseColorFactor = Vector3.new(0.104999997, 0.0900000036, 0.100000001), color = Color3.fromRGB(91, 85, 89)},
+			LeftInnerEar = {material = "InnerEarPink", baseColorFactor = Vector3.new(0.920000017, 0.479999989, 0.49000001), color = Color3.fromRGB(246, 184, 186)},
+			LeftMuzzle = {material = "CatWhite", baseColorFactor = Vector3.new(0.959999979, 0.939999998, 0.899999976), color = Color3.fromRGB(250, 248, 243)},
+			LeftOuterEar = {material = "CatCharcoal", baseColorFactor = Vector3.new(0.104999997, 0.0900000036, 0.100000001), color = Color3.fromRGB(91, 85, 89)},
+			LeftToe1 = {material = "NoseDark", baseColorFactor = Vector3.new(0.0549999997, 0.0450000018, 0.0500000007), color = Color3.fromRGB(66, 60, 63)},
+			LeftToe2 = {material = "NoseDark", baseColorFactor = Vector3.new(0.0549999997, 0.0450000018, 0.0500000007), color = Color3.fromRGB(66, 60, 63)},
+			LeftToe3 = {material = "NoseDark", baseColorFactor = Vector3.new(0.0549999997, 0.0450000018, 0.0500000007), color = Color3.fromRGB(66, 60, 63)},
+			Mouth = {material = "NoseDark", baseColorFactor = Vector3.new(0.0549999997, 0.0450000018, 0.0500000007), color = Color3.fromRGB(66, 60, 63)},
+			Nose = {material = "NoseDark", baseColorFactor = Vector3.new(0.0549999997, 0.0450000018, 0.0500000007), color = Color3.fromRGB(66, 60, 63)},
+			RightEye = {material = "EyeBlack", baseColorFactor = Vector3.new(0.00400000019, 0.00300000003, 0.00400000019), color = Color3.fromRGB(13, 10, 13)},
+			RightEyeHighlight = {material = "EyeHighlight", baseColorFactor = Vector3.new(1, 1, 1), color = Color3.fromRGB(255, 255, 255)},
+			RightEyeRing = {material = "EyeLime", baseColorFactor = Vector3.new(0.670000017, 0.930000007, 0.0199999996), color = Color3.fromRGB(214, 247, 39)},
+			RightFrontLeg = {material = "CatCharcoal", baseColorFactor = Vector3.new(0.104999997, 0.0900000036, 0.100000001), color = Color3.fromRGB(91, 85, 89)},
+			RightFrontPaw = {material = "CatWhite", baseColorFactor = Vector3.new(0.959999979, 0.939999998, 0.899999976), color = Color3.fromRGB(250, 248, 243)},
+			RightHaunch = {material = "CatCharcoal", baseColorFactor = Vector3.new(0.104999997, 0.0900000036, 0.100000001), color = Color3.fromRGB(91, 85, 89)},
+			RightInnerEar = {material = "InnerEarPink", baseColorFactor = Vector3.new(0.920000017, 0.479999989, 0.49000001), color = Color3.fromRGB(246, 184, 186)},
+			RightMuzzle = {material = "CatWhite", baseColorFactor = Vector3.new(0.959999979, 0.939999998, 0.899999976), color = Color3.fromRGB(250, 248, 243)},
+			RightOuterEar = {material = "CatCharcoal", baseColorFactor = Vector3.new(0.104999997, 0.0900000036, 0.100000001), color = Color3.fromRGB(91, 85, 89)},
+			RightToe1 = {material = "NoseDark", baseColorFactor = Vector3.new(0.0549999997, 0.0450000018, 0.0500000007), color = Color3.fromRGB(66, 60, 63)},
+			RightToe2 = {material = "NoseDark", baseColorFactor = Vector3.new(0.0549999997, 0.0450000018, 0.0500000007), color = Color3.fromRGB(66, 60, 63)},
+			RightToe3 = {material = "NoseDark", baseColorFactor = Vector3.new(0.0549999997, 0.0450000018, 0.0500000007), color = Color3.fromRGB(66, 60, 63)},
+			Tail = {material = "CatCharcoal", baseColorFactor = Vector3.new(0.104999997, 0.0900000036, 0.100000001), color = Color3.fromRGB(91, 85, 89)},
+		},
 		effects = {{name = "SilverDust", className = "ParticleEmitter", position = Vector3.new(0, 0.2, 0)}},
 	},
 	FluffDog = {
@@ -51,6 +117,39 @@ local PET_CONTRACTS = {
 			"LeftFrontLeg", "RightFrontLeg", "LeftFrontPaw", "RightFrontPaw", "LeftRearLeg", "RightRearLeg",
 			"LeftRearPaw", "RightRearPaw", "Tail", "TailTip",
 		},
+		visuals = {
+			Body = {material = "DogSlate", baseColorFactor = Vector3.new(0.180000007, 0.239999995, 0.280000001), color = Color3.fromRGB(118, 134, 144)},
+			Chest = {material = "DogWhite", baseColorFactor = Vector3.new(0.910000026, 0.910000026, 0.860000014), color = Color3.fromRGB(245, 245, 239)},
+			FaceBlaze = {material = "DogWhite", baseColorFactor = Vector3.new(0.910000026, 0.910000026, 0.860000014), color = Color3.fromRGB(245, 245, 239)},
+			Head = {material = "DogSlate", baseColorFactor = Vector3.new(0.180000007, 0.239999995, 0.280000001), color = Color3.fromRGB(118, 134, 144)},
+			LeftBrow = {material = "DogCaramel", baseColorFactor = Vector3.new(0.660000026, 0.310000002, 0.109999999), color = Color3.fromRGB(212, 151, 93)},
+			LeftCheek = {material = "DogCaramel", baseColorFactor = Vector3.new(0.660000026, 0.310000002, 0.109999999), color = Color3.fromRGB(212, 151, 93)},
+			LeftEar = {material = "DogSlate", baseColorFactor = Vector3.new(0.180000007, 0.239999995, 0.280000001), color = Color3.fromRGB(118, 134, 144)},
+			LeftEye = {material = "EyeBlack", baseColorFactor = Vector3.new(0.00800000038, 0.00600000005, 0.00499999989), color = Color3.fromRGB(22, 18, 16)},
+			LeftEyeHighlight = {material = "EyeHighlight", baseColorFactor = Vector3.new(1, 0.980000019, 0.899999976), color = Color3.fromRGB(255, 253, 243)},
+			LeftFrontLeg = {material = "DogCaramel", baseColorFactor = Vector3.new(0.660000026, 0.310000002, 0.109999999), color = Color3.fromRGB(212, 151, 93)},
+			LeftFrontPaw = {material = "DogWhite", baseColorFactor = Vector3.new(0.910000026, 0.910000026, 0.860000014), color = Color3.fromRGB(245, 245, 239)},
+			LeftIris = {material = "EyeAmber", baseColorFactor = Vector3.new(0.889999986, 0.479999989, 0.0700000003), color = Color3.fromRGB(242, 184, 75)},
+			LeftMuzzle = {material = "DogWhite", baseColorFactor = Vector3.new(0.910000026, 0.910000026, 0.860000014), color = Color3.fromRGB(245, 245, 239)},
+			LeftRearLeg = {material = "DogCaramel", baseColorFactor = Vector3.new(0.660000026, 0.310000002, 0.109999999), color = Color3.fromRGB(212, 151, 93)},
+			LeftRearPaw = {material = "DogWhite", baseColorFactor = Vector3.new(0.910000026, 0.910000026, 0.860000014), color = Color3.fromRGB(245, 245, 239)},
+			Mouth = {material = "MouthDark", baseColorFactor = Vector3.new(0.0599999987, 0.0250000004, 0.0199999996), color = Color3.fromRGB(69, 44, 39)},
+			Nose = {material = "MouthDark", baseColorFactor = Vector3.new(0.0599999987, 0.0250000004, 0.0199999996), color = Color3.fromRGB(69, 44, 39)},
+			RightBrow = {material = "DogCaramel", baseColorFactor = Vector3.new(0.660000026, 0.310000002, 0.109999999), color = Color3.fromRGB(212, 151, 93)},
+			RightCheek = {material = "DogCaramel", baseColorFactor = Vector3.new(0.660000026, 0.310000002, 0.109999999), color = Color3.fromRGB(212, 151, 93)},
+			RightEar = {material = "DogSlate", baseColorFactor = Vector3.new(0.180000007, 0.239999995, 0.280000001), color = Color3.fromRGB(118, 134, 144)},
+			RightEye = {material = "EyeBlack", baseColorFactor = Vector3.new(0.00800000038, 0.00600000005, 0.00499999989), color = Color3.fromRGB(22, 18, 16)},
+			RightEyeHighlight = {material = "EyeHighlight", baseColorFactor = Vector3.new(1, 0.980000019, 0.899999976), color = Color3.fromRGB(255, 253, 243)},
+			RightFrontLeg = {material = "DogCaramel", baseColorFactor = Vector3.new(0.660000026, 0.310000002, 0.109999999), color = Color3.fromRGB(212, 151, 93)},
+			RightFrontPaw = {material = "DogWhite", baseColorFactor = Vector3.new(0.910000026, 0.910000026, 0.860000014), color = Color3.fromRGB(245, 245, 239)},
+			RightIris = {material = "EyeAmber", baseColorFactor = Vector3.new(0.889999986, 0.479999989, 0.0700000003), color = Color3.fromRGB(242, 184, 75)},
+			RightMuzzle = {material = "DogWhite", baseColorFactor = Vector3.new(0.910000026, 0.910000026, 0.860000014), color = Color3.fromRGB(245, 245, 239)},
+			RightRearLeg = {material = "DogCaramel", baseColorFactor = Vector3.new(0.660000026, 0.310000002, 0.109999999), color = Color3.fromRGB(212, 151, 93)},
+			RightRearPaw = {material = "DogWhite", baseColorFactor = Vector3.new(0.910000026, 0.910000026, 0.860000014), color = Color3.fromRGB(245, 245, 239)},
+			Tail = {material = "DogSlate", baseColorFactor = Vector3.new(0.180000007, 0.239999995, 0.280000001), color = Color3.fromRGB(118, 134, 144)},
+			TailTip = {material = "DogWhite", baseColorFactor = Vector3.new(0.910000026, 0.910000026, 0.860000014), color = Color3.fromRGB(245, 245, 239)},
+			Tongue = {material = "TonguePink", baseColorFactor = Vector3.new(0.860000014, 0.239999995, 0.25999999), color = Color3.fromRGB(239, 134, 139)},
+		},
 		effects = {{name = "SilverDust", className = "ParticleEmitter", position = Vector3.new(0, 0.2, 0)}},
 	},
 	FrostFox = {
@@ -63,6 +162,39 @@ local PET_CONTRACTS = {
 			"ForeheadTuftLeft", "ForeheadTuftRight", "ChestRuffUpper", "ChestRuffLeft", "ChestRuffRight", "ChestRuffLower",
 			"LeftFrontLeg", "RightFrontLeg", "LeftRearLeg", "RightRearLeg", "LeftFrontPaw", "RightFrontPaw",
 			"LeftRearPaw", "RightRearPaw", "TailRoot", "TailPlume", "TailTip",
+		},
+		visuals = {
+			Body = {material = "FrostCyan", baseColorFactor = Vector3.new(0.0799999982, 0.560000002, 0.720000029), color = Color3.fromRGB(80, 197, 221)},
+			ChestRuffLeft = {material = "FrostWhite", baseColorFactor = Vector3.new(0.930000007, 0.980000019, 0.980000019), color = Color3.fromRGB(247, 253, 253)},
+			ChestRuffLower = {material = "FrostWhite", baseColorFactor = Vector3.new(0.930000007, 0.980000019, 0.980000019), color = Color3.fromRGB(247, 253, 253)},
+			ChestRuffRight = {material = "FrostWhite", baseColorFactor = Vector3.new(0.930000007, 0.980000019, 0.980000019), color = Color3.fromRGB(247, 253, 253)},
+			ChestRuffUpper = {material = "FrostWhite", baseColorFactor = Vector3.new(0.930000007, 0.980000019, 0.980000019), color = Color3.fromRGB(247, 253, 253)},
+			ForeheadTuftCenter = {material = "FrostWhite", baseColorFactor = Vector3.new(0.930000007, 0.980000019, 0.980000019), color = Color3.fromRGB(247, 253, 253)},
+			ForeheadTuftLeft = {material = "FrostWhite", baseColorFactor = Vector3.new(0.930000007, 0.980000019, 0.980000019), color = Color3.fromRGB(247, 253, 253)},
+			ForeheadTuftRight = {material = "FrostWhite", baseColorFactor = Vector3.new(0.930000007, 0.980000019, 0.980000019), color = Color3.fromRGB(247, 253, 253)},
+			Head = {material = "FrostCyanLight", baseColorFactor = Vector3.new(0.230000004, 0.800000012, 0.910000026), color = Color3.fromRGB(132, 231, 245)},
+			LeftCheekFur = {material = "FrostWhite", baseColorFactor = Vector3.new(0.930000007, 0.980000019, 0.980000019), color = Color3.fromRGB(247, 253, 253)},
+			LeftEye = {material = "FrostNavy", baseColorFactor = Vector3.new(0.0250000004, 0.119999997, 0.200000003), color = Color3.fromRGB(44, 97, 124)},
+			LeftEyeHighlight = {material = "EyeHighlight", baseColorFactor = Vector3.new(0.920000017, 1, 1), color = Color3.fromRGB(246, 255, 255)},
+			LeftFrontLeg = {material = "FrostCyan", baseColorFactor = Vector3.new(0.0799999982, 0.560000002, 0.720000029), color = Color3.fromRGB(80, 197, 221)},
+			LeftFrontPaw = {material = "FrostPawBlue", baseColorFactor = Vector3.new(0.0299999993, 0.330000013, 0.550000012), color = Color3.fromRGB(48, 155, 196)},
+			LeftInnerEar = {material = "FrostNavy", baseColorFactor = Vector3.new(0.0250000004, 0.119999997, 0.200000003), color = Color3.fromRGB(44, 97, 124)},
+			LeftOuterEar = {material = "FrostCyan", baseColorFactor = Vector3.new(0.0799999982, 0.560000002, 0.720000029), color = Color3.fromRGB(80, 197, 221)},
+			LeftRearLeg = {material = "FrostCyan", baseColorFactor = Vector3.new(0.0799999982, 0.560000002, 0.720000029), color = Color3.fromRGB(80, 197, 221)},
+			LeftRearPaw = {material = "FrostPawBlue", baseColorFactor = Vector3.new(0.0299999993, 0.330000013, 0.550000012), color = Color3.fromRGB(48, 155, 196)},
+			Nose = {material = "FrostNavy", baseColorFactor = Vector3.new(0.0250000004, 0.119999997, 0.200000003), color = Color3.fromRGB(44, 97, 124)},
+			RightCheekFur = {material = "FrostWhite", baseColorFactor = Vector3.new(0.930000007, 0.980000019, 0.980000019), color = Color3.fromRGB(247, 253, 253)},
+			RightEye = {material = "FrostNavy", baseColorFactor = Vector3.new(0.0250000004, 0.119999997, 0.200000003), color = Color3.fromRGB(44, 97, 124)},
+			RightEyeHighlight = {material = "EyeHighlight", baseColorFactor = Vector3.new(0.920000017, 1, 1), color = Color3.fromRGB(246, 255, 255)},
+			RightFrontLeg = {material = "FrostCyan", baseColorFactor = Vector3.new(0.0799999982, 0.560000002, 0.720000029), color = Color3.fromRGB(80, 197, 221)},
+			RightFrontPaw = {material = "FrostPawBlue", baseColorFactor = Vector3.new(0.0299999993, 0.330000013, 0.550000012), color = Color3.fromRGB(48, 155, 196)},
+			RightInnerEar = {material = "FrostNavy", baseColorFactor = Vector3.new(0.0250000004, 0.119999997, 0.200000003), color = Color3.fromRGB(44, 97, 124)},
+			RightOuterEar = {material = "FrostCyan", baseColorFactor = Vector3.new(0.0799999982, 0.560000002, 0.720000029), color = Color3.fromRGB(80, 197, 221)},
+			RightRearLeg = {material = "FrostCyan", baseColorFactor = Vector3.new(0.0799999982, 0.560000002, 0.720000029), color = Color3.fromRGB(80, 197, 221)},
+			RightRearPaw = {material = "FrostPawBlue", baseColorFactor = Vector3.new(0.0299999993, 0.330000013, 0.550000012), color = Color3.fromRGB(48, 155, 196)},
+			TailPlume = {material = "FrostWhite", baseColorFactor = Vector3.new(0.930000007, 0.980000019, 0.980000019), color = Color3.fromRGB(247, 253, 253)},
+			TailRoot = {material = "FrostCyan", baseColorFactor = Vector3.new(0.0799999982, 0.560000002, 0.720000029), color = Color3.fromRGB(80, 197, 221)},
+			TailTip = {material = "FrostWhite", baseColorFactor = Vector3.new(0.930000007, 0.980000019, 0.980000019), color = Color3.fromRGB(247, 253, 253)},
 		},
 		effects = {
 			{name = "VioletSparkles", className = "ParticleEmitter", position = Vector3.new(0, 0.25, 0)},
@@ -81,6 +213,44 @@ local PET_CONTRACTS = {
 			"RightWingLower", "RightWingTip", "LeftLeg", "RightLeg", "LeftFoot", "RightFoot", "LeftTalon1",
 			"LeftTalon2", "LeftTalon3", "RightTalon1", "RightTalon2", "RightTalon3", "TailLeft", "TailCenter", "TailRight",
 		},
+		visuals = {
+			Beak = {material = "Amber", baseColorFactor = Vector3.new(0.939999998, 0.469999999, 0.0500000007), color = Color3.fromRGB(248, 182, 63)},
+			Body = {material = "SnowPlumage", baseColorFactor = Vector3.new(0.899999976, 0.910000026, 0.889999986), color = Color3.fromRGB(243, 245, 242)},
+			ChestLeft = {material = "SilverPlumage", baseColorFactor = Vector3.new(0.419999987, 0.460000008, 0.49000001), color = Color3.fromRGB(173, 181, 186)},
+			ChestLower = {material = "SnowPlumage", baseColorFactor = Vector3.new(0.899999976, 0.910000026, 0.889999986), color = Color3.fromRGB(243, 245, 242)},
+			ChestRight = {material = "SilverPlumage", baseColorFactor = Vector3.new(0.419999987, 0.460000008, 0.49000001), color = Color3.fromRGB(173, 181, 186)},
+			ChestUpper = {material = "SilverPlumage", baseColorFactor = Vector3.new(0.419999987, 0.460000008, 0.49000001), color = Color3.fromRGB(173, 181, 186)},
+			Head = {material = "SnowPlumage", baseColorFactor = Vector3.new(0.899999976, 0.910000026, 0.889999986), color = Color3.fromRGB(243, 245, 242)},
+			LeftEye = {material = "EyeBlack", baseColorFactor = Vector3.new(0.00600000005, 0.00600000005, 0.00700000022), color = Color3.fromRGB(18, 18, 20)},
+			LeftEyeDisc = {material = "SilverPlumage", baseColorFactor = Vector3.new(0.419999987, 0.460000008, 0.49000001), color = Color3.fromRGB(173, 181, 186)},
+			LeftEyeHighlight = {material = "EyeHighlight", baseColorFactor = Vector3.new(1, 1, 0.959999979), color = Color3.fromRGB(255, 255, 250)},
+			LeftFoot = {material = "Amber", baseColorFactor = Vector3.new(0.939999998, 0.469999999, 0.0500000007), color = Color3.fromRGB(248, 182, 63)},
+			LeftLeg = {material = "StormCharcoal", baseColorFactor = Vector3.new(0.0799999982, 0.0900000036, 0.100000001), color = Color3.fromRGB(80, 85, 89)},
+			LeftTalon1 = {material = "Amber", baseColorFactor = Vector3.new(0.939999998, 0.469999999, 0.0500000007), color = Color3.fromRGB(248, 182, 63)},
+			LeftTalon2 = {material = "Amber", baseColorFactor = Vector3.new(0.939999998, 0.469999999, 0.0500000007), color = Color3.fromRGB(248, 182, 63)},
+			LeftTalon3 = {material = "Amber", baseColorFactor = Vector3.new(0.939999998, 0.469999999, 0.0500000007), color = Color3.fromRGB(248, 182, 63)},
+			LeftWingBase = {material = "SilverPlumage", baseColorFactor = Vector3.new(0.419999987, 0.460000008, 0.49000001), color = Color3.fromRGB(173, 181, 186)},
+			LeftWingLower = {material = "SnowPlumage", baseColorFactor = Vector3.new(0.899999976, 0.910000026, 0.889999986), color = Color3.fromRGB(243, 245, 242)},
+			LeftWingMiddle = {material = "SilverPlumage", baseColorFactor = Vector3.new(0.419999987, 0.460000008, 0.49000001), color = Color3.fromRGB(173, 181, 186)},
+			LeftWingTip = {material = "SilverPlumage", baseColorFactor = Vector3.new(0.419999987, 0.460000008, 0.49000001), color = Color3.fromRGB(173, 181, 186)},
+			LeftWingUpper = {material = "SnowPlumage", baseColorFactor = Vector3.new(0.899999976, 0.910000026, 0.889999986), color = Color3.fromRGB(243, 245, 242)},
+			RightEye = {material = "EyeBlack", baseColorFactor = Vector3.new(0.00600000005, 0.00600000005, 0.00700000022), color = Color3.fromRGB(18, 18, 20)},
+			RightEyeDisc = {material = "SilverPlumage", baseColorFactor = Vector3.new(0.419999987, 0.460000008, 0.49000001), color = Color3.fromRGB(173, 181, 186)},
+			RightEyeHighlight = {material = "EyeHighlight", baseColorFactor = Vector3.new(1, 1, 0.959999979), color = Color3.fromRGB(255, 255, 250)},
+			RightFoot = {material = "Amber", baseColorFactor = Vector3.new(0.939999998, 0.469999999, 0.0500000007), color = Color3.fromRGB(248, 182, 63)},
+			RightLeg = {material = "StormCharcoal", baseColorFactor = Vector3.new(0.0799999982, 0.0900000036, 0.100000001), color = Color3.fromRGB(80, 85, 89)},
+			RightTalon1 = {material = "Amber", baseColorFactor = Vector3.new(0.939999998, 0.469999999, 0.0500000007), color = Color3.fromRGB(248, 182, 63)},
+			RightTalon2 = {material = "Amber", baseColorFactor = Vector3.new(0.939999998, 0.469999999, 0.0500000007), color = Color3.fromRGB(248, 182, 63)},
+			RightTalon3 = {material = "Amber", baseColorFactor = Vector3.new(0.939999998, 0.469999999, 0.0500000007), color = Color3.fromRGB(248, 182, 63)},
+			RightWingBase = {material = "SilverPlumage", baseColorFactor = Vector3.new(0.419999987, 0.460000008, 0.49000001), color = Color3.fromRGB(173, 181, 186)},
+			RightWingLower = {material = "SnowPlumage", baseColorFactor = Vector3.new(0.899999976, 0.910000026, 0.889999986), color = Color3.fromRGB(243, 245, 242)},
+			RightWingMiddle = {material = "SilverPlumage", baseColorFactor = Vector3.new(0.419999987, 0.460000008, 0.49000001), color = Color3.fromRGB(173, 181, 186)},
+			RightWingTip = {material = "SilverPlumage", baseColorFactor = Vector3.new(0.419999987, 0.460000008, 0.49000001), color = Color3.fromRGB(173, 181, 186)},
+			RightWingUpper = {material = "SnowPlumage", baseColorFactor = Vector3.new(0.899999976, 0.910000026, 0.889999986), color = Color3.fromRGB(243, 245, 242)},
+			TailCenter = {material = "SnowPlumage", baseColorFactor = Vector3.new(0.899999976, 0.910000026, 0.889999986), color = Color3.fromRGB(243, 245, 242)},
+			TailLeft = {material = "SilverPlumage", baseColorFactor = Vector3.new(0.419999987, 0.460000008, 0.49000001), color = Color3.fromRGB(173, 181, 186)},
+			TailRight = {material = "SilverPlumage", baseColorFactor = Vector3.new(0.419999987, 0.460000008, 0.49000001), color = Color3.fromRGB(173, 181, 186)},
+		},
 		effects = {
 			{name = "VioletSparkles", className = "ParticleEmitter", position = Vector3.new(0, 0.25, 0)},
 			{name = "EpicAuraLight", className = "PointLight", position = Vector3.new(0, 0.15, 0)},
@@ -97,6 +267,54 @@ local PET_CONTRACTS = {
 			"LeftBoot", "RightBoot", "LeftCoatPanel", "RightCoatPanel", "Belt", "ChestRune", "LeftSleeveRune", "RightSleeveRune",
 			"LeftLegRune", "RightLegRune", "StaffShaft", "StaffLowerGrip", "StaffUpperGrip", "StaffCrown", "StaffLeftProng",
 			"StaffRightProng", "StaffLeftClaw", "StaffRightClaw", "StaffFlameCore", "StaffFlameLeft", "StaffFlameRight", "StaffTip",
+		},
+		visuals = {
+			Belt = {material = "DragonArmorLight", baseColorFactor = Vector3.new(0.25, 0.389999986, 0.379999995), color = Color3.fromRGB(137, 168, 166)},
+			Body = {material = "VoidRobe", baseColorFactor = Vector3.new(0.0250000004, 0.0399999991, 0.0450000018), color = Color3.fromRGB(44, 56, 60)},
+			ChestRune = {material = "AuraCyan", baseColorFactor = Vector3.new(0.00999999978, 0.860000014, 0.839999974), color = Color3.fromRGB(25, 239, 236)},
+			Collar = {material = "DragonArmorLight", baseColorFactor = Vector3.new(0.25, 0.389999986, 0.379999995), color = Color3.fromRGB(137, 168, 166)},
+			FaceMask = {material = "DragonArmor", baseColorFactor = Vector3.new(0.0799999982, 0.129999995, 0.140000001), color = Color3.fromRGB(80, 101, 105)},
+			Head = {material = "AuraCyan", baseColorFactor = Vector3.new(0.00999999978, 0.860000014, 0.839999974), color = Color3.fromRGB(25, 239, 236)},
+			HelmetBand = {material = "DragonArmor", baseColorFactor = Vector3.new(0.0799999982, 0.129999995, 0.140000001), color = Color3.fromRGB(80, 101, 105)},
+			HelmetCrest = {material = "DragonArmor", baseColorFactor = Vector3.new(0.0799999982, 0.129999995, 0.140000001), color = Color3.fromRGB(80, 101, 105)},
+			HelmetDome = {material = "DragonArmorLight", baseColorFactor = Vector3.new(0.25, 0.389999986, 0.379999995), color = Color3.fromRGB(137, 168, 166)},
+			LeftArm = {material = "VoidRobe", baseColorFactor = Vector3.new(0.0250000004, 0.0399999991, 0.0450000018), color = Color3.fromRGB(44, 56, 60)},
+			LeftBoot = {material = "DragonArmor", baseColorFactor = Vector3.new(0.0799999982, 0.129999995, 0.140000001), color = Color3.fromRGB(80, 101, 105)},
+			LeftCoatPanel = {material = "DragonArmor", baseColorFactor = Vector3.new(0.0799999982, 0.129999995, 0.140000001), color = Color3.fromRGB(80, 101, 105)},
+			LeftCuff = {material = "AuraCyan", baseColorFactor = Vector3.new(0.00999999978, 0.860000014, 0.839999974), color = Color3.fromRGB(25, 239, 236)},
+			LeftEye = {material = "AuraCyanSoft", baseColorFactor = Vector3.new(0.100000001, 0.959999979, 0.930000007), color = Color3.fromRGB(89, 250, 247)},
+			LeftHand = {material = "AuraCyan", baseColorFactor = Vector3.new(0.00999999978, 0.860000014, 0.839999974), color = Color3.fromRGB(25, 239, 236)},
+			LeftHelmetPillar = {material = "DragonArmor", baseColorFactor = Vector3.new(0.0799999982, 0.129999995, 0.140000001), color = Color3.fromRGB(80, 101, 105)},
+			LeftHelmetRune = {material = "AuraCyan", baseColorFactor = Vector3.new(0.00999999978, 0.860000014, 0.839999974), color = Color3.fromRGB(25, 239, 236)},
+			LeftLeg = {material = "VoidRobe", baseColorFactor = Vector3.new(0.0250000004, 0.0399999991, 0.0450000018), color = Color3.fromRGB(44, 56, 60)},
+			LeftLegRune = {material = "AuraCyan", baseColorFactor = Vector3.new(0.00999999978, 0.860000014, 0.839999974), color = Color3.fromRGB(25, 239, 236)},
+			LeftShoulder = {material = "DragonArmor", baseColorFactor = Vector3.new(0.0799999982, 0.129999995, 0.140000001), color = Color3.fromRGB(80, 101, 105)},
+			LeftSleeveRune = {material = "AuraCyan", baseColorFactor = Vector3.new(0.00999999978, 0.860000014, 0.839999974), color = Color3.fromRGB(25, 239, 236)},
+			RightArm = {material = "VoidRobe", baseColorFactor = Vector3.new(0.0250000004, 0.0399999991, 0.0450000018), color = Color3.fromRGB(44, 56, 60)},
+			RightBoot = {material = "DragonArmor", baseColorFactor = Vector3.new(0.0799999982, 0.129999995, 0.140000001), color = Color3.fromRGB(80, 101, 105)},
+			RightCoatPanel = {material = "DragonArmor", baseColorFactor = Vector3.new(0.0799999982, 0.129999995, 0.140000001), color = Color3.fromRGB(80, 101, 105)},
+			RightCuff = {material = "AuraCyan", baseColorFactor = Vector3.new(0.00999999978, 0.860000014, 0.839999974), color = Color3.fromRGB(25, 239, 236)},
+			RightEye = {material = "AuraCyanSoft", baseColorFactor = Vector3.new(0.100000001, 0.959999979, 0.930000007), color = Color3.fromRGB(89, 250, 247)},
+			RightHand = {material = "AuraCyan", baseColorFactor = Vector3.new(0.00999999978, 0.860000014, 0.839999974), color = Color3.fromRGB(25, 239, 236)},
+			RightHelmetPillar = {material = "DragonArmor", baseColorFactor = Vector3.new(0.0799999982, 0.129999995, 0.140000001), color = Color3.fromRGB(80, 101, 105)},
+			RightHelmetRune = {material = "AuraCyan", baseColorFactor = Vector3.new(0.00999999978, 0.860000014, 0.839999974), color = Color3.fromRGB(25, 239, 236)},
+			RightLeg = {material = "VoidRobe", baseColorFactor = Vector3.new(0.0250000004, 0.0399999991, 0.0450000018), color = Color3.fromRGB(44, 56, 60)},
+			RightLegRune = {material = "AuraCyan", baseColorFactor = Vector3.new(0.00999999978, 0.860000014, 0.839999974), color = Color3.fromRGB(25, 239, 236)},
+			RightShoulder = {material = "DragonArmor", baseColorFactor = Vector3.new(0.0799999982, 0.129999995, 0.140000001), color = Color3.fromRGB(80, 101, 105)},
+			RightSleeveRune = {material = "AuraCyan", baseColorFactor = Vector3.new(0.00999999978, 0.860000014, 0.839999974), color = Color3.fromRGB(25, 239, 236)},
+			StaffCrown = {material = "DragonArmor", baseColorFactor = Vector3.new(0.0799999982, 0.129999995, 0.140000001), color = Color3.fromRGB(80, 101, 105)},
+			StaffFlameCore = {material = "AuraCyanSoft", baseColorFactor = Vector3.new(0.100000001, 0.959999979, 0.930000007), color = Color3.fromRGB(89, 250, 247)},
+			StaffFlameLeft = {material = "AuraCyan", baseColorFactor = Vector3.new(0.00999999978, 0.860000014, 0.839999974), color = Color3.fromRGB(25, 239, 236)},
+			StaffFlameRight = {material = "AuraCyan", baseColorFactor = Vector3.new(0.00999999978, 0.860000014, 0.839999974), color = Color3.fromRGB(25, 239, 236)},
+			StaffLeftClaw = {material = "StaffDark", baseColorFactor = Vector3.new(0.0250000004, 0.0350000001, 0.0350000001), color = Color3.fromRGB(44, 53, 53)},
+			StaffLeftProng = {material = "DragonArmor", baseColorFactor = Vector3.new(0.0799999982, 0.129999995, 0.140000001), color = Color3.fromRGB(80, 101, 105)},
+			StaffLowerGrip = {material = "DragonArmorLight", baseColorFactor = Vector3.new(0.25, 0.389999986, 0.379999995), color = Color3.fromRGB(137, 168, 166)},
+			StaffRightClaw = {material = "StaffDark", baseColorFactor = Vector3.new(0.0250000004, 0.0350000001, 0.0350000001), color = Color3.fromRGB(44, 53, 53)},
+			StaffRightProng = {material = "DragonArmor", baseColorFactor = Vector3.new(0.0799999982, 0.129999995, 0.140000001), color = Color3.fromRGB(80, 101, 105)},
+			StaffShaft = {material = "StaffDark", baseColorFactor = Vector3.new(0.0250000004, 0.0350000001, 0.0350000001), color = Color3.fromRGB(44, 53, 53)},
+			StaffTip = {material = "AuraCyan", baseColorFactor = Vector3.new(0.00999999978, 0.860000014, 0.839999974), color = Color3.fromRGB(25, 239, 236)},
+			StaffUpperGrip = {material = "DragonArmorLight", baseColorFactor = Vector3.new(0.25, 0.389999986, 0.379999995), color = Color3.fromRGB(137, 168, 166)},
+			TorsoArmor = {material = "DragonArmor", baseColorFactor = Vector3.new(0.0799999982, 0.129999995, 0.140000001), color = Color3.fromRGB(80, 101, 105)},
 		},
 		effects = {
 			{name = "GoldShimmer", className = "ParticleEmitter", position = Vector3.new(0, 0.25, 0)},
@@ -223,6 +441,26 @@ for _, meshName in spec.meshNames do
 end
 if #spec.meshNames ~= spec.meshCount then
 	addProblem(problems, "general", "Contract mesh-name count does not match its exact MeshPart count.")
+end
+
+local visualContractCount = 0
+for meshName, visual in spec.visuals do
+	visualContractCount += 1
+	if not expectedMeshNames[meshName] then
+		addProblem(problems, "general", string.format("Visual contract targets unknown MeshPart %s.", meshName))
+	end
+	if type(visual.material) ~= "string" or visual.material == ""
+		or typeof(visual.baseColorFactor) ~= "Vector3" or typeof(visual.color) ~= "Color3" then
+		addProblem(problems, "general", string.format("Visual contract for %s is malformed.", meshName))
+	end
+end
+for meshName in expectedMeshNames do
+	if not spec.visuals[meshName] then
+		addProblem(problems, "general", string.format("Visual contract is missing MeshPart %s.", meshName))
+	end
+end
+if visualContractCount ~= spec.meshCount then
+	addProblem(problems, "general", "Visual contract count does not match its exact MeshPart count.")
 end
 
 for alias, canonicalName in spec.aliases or {} do
@@ -577,6 +815,7 @@ for _, meshPart in meshParts do
 		meshPart.Name = canonicalName
 		renamedMeshPartCount += 1
 	end
+	meshPart.Color = spec.visuals[canonicalName].color
 end
 
 local function findUniqueDescendant(name, className)
@@ -734,7 +973,7 @@ local function configureEffect(effectSpec, effect)
 	end
 end
 
--- Geometry CFrames, sizes, mesh IDs, and materials are intentionally untouched.
+-- Geometry CFrames, sizes, mesh IDs, and Roblox material types are intentionally untouched.
 candidate.Name = petId .. "_v3_Candidate"
 candidate.PrimaryPart = body
 candidate:SetAttribute("PetId", spec.petId)
@@ -791,6 +1030,7 @@ assert(candidate:GetAttribute("ForwardAxis") == spec.forwardAxis, "ForwardAxis m
 assert(candidate:GetAttribute("Placeholder") == false, "Placeholder metadata configuration failed.")
 
 for _, meshPart in meshParts do
+	assert(meshPart.Color == spec.visuals[meshPart.Name].color, string.format("%s color configuration failed.", meshPart.Name))
 	assert(meshPart.Anchored, string.format("%s must be anchored.", meshPart.Name))
 	assert(not meshPart.CanCollide, string.format("%s must not collide.", meshPart.Name))
 	assert(not meshPart.CanTouch, string.format("%s must not generate touch events.", meshPart.Name))

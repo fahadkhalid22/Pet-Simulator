@@ -204,11 +204,41 @@ function Read-FiniteNumber([object]$Node, [string]$Context) {
 	return $value
 }
 
+function Read-VisualColorContracts([string]$HelperText, [object[]]$PetContracts) {
+	$contracts = @{}
+	foreach ($pet in $PetContracts) {
+		$petPattern = '(?ms)^\t' + [regex]::Escape($pet.Id) + '\s*=\s*\{(?<body>.*?)(?=^\t[A-Za-z][A-Za-z0-9]*\s*=\s*\{|^\})'
+		$petMatch = [regex]::Match($HelperText, $petPattern)
+		Assert-Condition $petMatch.Success "Studio helper is missing the $($pet.Id) contract."
+		$visualMatch = [regex]::Match($petMatch.Groups['body'].Value, '(?ms)^\t\tvisuals\s*=\s*\{\r?\n(?<visuals>.*?)^\t\t\},')
+		Assert-Condition $visualMatch.Success "Studio helper is missing the $($pet.Id) visual contract."
+
+		$colors = @{}
+		$entryPattern = '(?m)^\s*([A-Za-z][A-Za-z0-9]*)\s*=\s*\{material\s*=\s*"[^"]+",\s*baseColorFactor\s*=\s*Vector3\.new\([^)]+\),\s*color\s*=\s*Color3\.fromRGB\((\d+),\s*(\d+),\s*(\d+)\)\},?$'
+		foreach ($entry in [regex]::Matches($visualMatch.Groups['visuals'].Value, $entryPattern)) {
+			$name = $entry.Groups[1].Value
+			Assert-Condition (-not $colors.ContainsKey($name)) "Studio helper has duplicate visual component $($pet.Id).$name."
+			$red = [int]$entry.Groups[2].Value
+			$green = [int]$entry.Groups[3].Value
+			$blue = [int]$entry.Groups[4].Value
+			Assert-Condition ($red -le 255 -and $green -le 255 -and $blue -le 255) "Studio helper has an invalid RGB color for $($pet.Id).$name."
+			$colors[$name] = [uint32](0xFF000000L -bor ([int64]$red -shl 16) -bor ([int64]$green -shl 8) -bor [int64]$blue)
+		}
+		Assert-Condition ($colors.Count -eq $pet.MeshPartCount) "Studio helper visual contract for $($pet.Id) must contain exactly $($pet.MeshPartCount) components."
+		foreach ($name in $pet.MeshCritical) {
+			Assert-Condition ($colors.ContainsKey($name)) "Studio helper visual contract is missing $($pet.Id).$name."
+		}
+		$contracts[$pet.Id] = $colors
+	}
+	return $contracts
+}
+
 $currentPetId = "validator"
 try {
 $modelDirectory = Join-Path $RepositoryRoot "src/ServerStorage/PetModels"
 $referenceDirectory = Join-Path $RepositoryRoot "assets/references/pets"
 $configPath = Join-Path $RepositoryRoot "src/ReplicatedStorage/Shared/PetConfig.lua"
+$studioHelperPath = Join-Path $RepositoryRoot "tools/roblox/configure_pet_import.lua"
 $modelFiles = @(Get-ChildItem -LiteralPath $modelDirectory -File -Filter "*.rbxmx")
 $referenceFiles = @(Get-ChildItem -LiteralPath $referenceDirectory -File -Filter "ref_*.png")
 
@@ -216,6 +246,8 @@ Assert-Condition ($modelFiles.Count -eq $pets.Count) "Expected exactly 6 pet mod
 Assert-Condition ($referenceFiles.Count -eq $pets.Count) "Expected exactly 6 pet references; found $($referenceFiles.Count)."
 
 $config = Get-Content -Raw -LiteralPath $configPath
+$studioHelper = Get-Content -Raw -LiteralPath $studioHelperPath
+$visualColorContracts = Read-VisualColorContracts $studioHelper $pets
 $allowedV3Classes = @("MeshPart", "Attachment", "ParticleEmitter", "PointLight")
 $legacyCount = 0
 $v3Count = 0
@@ -339,6 +371,10 @@ foreach ($pet in $pets) {
 	foreach ($part in $meshParts) {
 		$name = Get-ItemName $part "$($pet.Id) MeshPart"
 		$partProperties = Get-ItemProperties $part "$($pet.Id).$name"
+		$colorNode = Get-RequiredXmlNode $partProperties "Color3uint8[@name='Color3uint8']" "$($pet.Id).$name Color3uint8"
+		$actualColor = [uint32]::Parse($colorNode.InnerText, $culture)
+		$expectedColor = [uint32]$visualColorContracts[$pet.Id][$name]
+		Assert-Condition ($actualColor -eq $expectedColor) "$($pet.Id).$name does not match its approved GLB material color."
 		$sizeNodes = @($partProperties.SelectNodes("Vector3[@name='size']"))
 		Assert-Condition ($sizeNodes.Count -eq 1) "$($pet.Id).$name must have exactly one Size."
 		$size = $sizeNodes[0]

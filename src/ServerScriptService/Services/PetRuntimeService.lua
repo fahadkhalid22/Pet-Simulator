@@ -2,12 +2,13 @@
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local RunService = game:GetService("RunService")
 local ServerStorage = game:GetService("ServerStorage")
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local GameConfig = require(Shared:WaitForChild("GameConfig"))
 local PetConfig = require(Shared:WaitForChild("PetConfig"))
+local PetRuntimeConfig = require(Shared:WaitForChild("PetRuntimeConfig"))
+local presentationProfiles = PetRuntimeConfig.Profiles :: {[string]: any}
 local PetService = require(script.Parent:WaitForChild("PetService"))
 
 local PetRuntimeService = {}
@@ -15,8 +16,6 @@ local PetRuntimeService = {}
 type RuntimePet = {
 	Model: Model,
 	Slot: number,
-	BottomLift: number,
-	CurrentCFrame: CFrame?,
 }
 
 type DesiredPet = {
@@ -32,16 +31,9 @@ type PlayerRuntime = {
 	CharacterRemoving: RBXScriptConnection?,
 }
 
-local RUNTIME_FOLDER_NAME = "AuralitPetRuntime"
-local FOLLOW_RESPONSIVENESS = 8
-local BOB_HEIGHT = 0.35
-local BOB_SPEED = 3.5
-local PARK_CFRAME = CFrame.new(0, -10_000, 0)
-local FORMATION_OFFSETS = table.freeze({
-	Vector3.new(0, -2.35, 4.75),
-	Vector3.new(-3, -2.35, 6.25),
-	Vector3.new(3, -2.35, 6.25),
-})
+local RUNTIME_FOLDER_NAME = PetRuntimeConfig.ContainerName
+local PARK_CFRAME = PetRuntimeConfig.ParkCFrame
+local FORMATION_OFFSETS = PetRuntimeConfig.FormationOffsets
 
 local started = false
 local runtimeRoot: Folder? = nil
@@ -152,10 +144,10 @@ local function createPetModel(player: Player, uid: string, definition: any): Mod
 		return nil
 	end
 	local model = result :: Model
-	local primaryPart = model.PrimaryPart or model:FindFirstChildWhichIsA("BasePart", true)
-	if not primaryPart then
+	local primaryPart = model:FindFirstChild("Body")
+	if not primaryPart or not primaryPart:IsA("BasePart") then
 		model:Destroy()
-		warnOnce("parts-" .. definition.Id, "Model " .. definition.ModelName .. " has no BasePart.")
+		warnOnce("parts-" .. definition.Id, "Model " .. definition.ModelName .. " has no Body BasePart.")
 		return nil
 	end
 
@@ -164,6 +156,15 @@ local function createPetModel(player: Player, uid: string, definition: any): Mod
 	model:SetAttribute("OwnerUserId", player.UserId)
 	model:SetAttribute("PetUid", uid)
 	model:SetAttribute("PetId", definition.Id)
+	local profile = presentationProfiles[definition.Id]
+	if not profile then
+		model:Destroy()
+		warnOnce("profile-" .. definition.Id, "No runtime presentation profile exists for " .. definition.Id .. ".")
+		return nil
+	end
+	model:SetAttribute("LocomotionMode", profile.Mode)
+	model:SetAttribute("LocomotionStyle", profile.Style)
+	model:SetAttribute("RuntimeSchemaVersion", 1)
 	for _, descendant in model:GetDescendants() do
 		if descendant:IsA("BasePart") then
 			descendant.Anchored = true
@@ -253,50 +254,13 @@ local function syncPlayer(player: Player, state: any)
 			if model then
 				local bottomLift = getBottomLift(model, wanted.Definition.Id)
 				model:SetAttribute("FormationSlot", wanted.Slot)
+				model:SetAttribute("GroundOffset", bottomLift)
 				model:PivotTo(PARK_CFRAME)
 				model.Parent = runtime.Folder
 				runtime.Pets[uid] = {
 					Model = model,
 					Slot = wanted.Slot,
-					BottomLift = bottomLift,
-					CurrentCFrame = nil,
 				}
-			end
-		end
-	end
-end
-
-local function getCharacterRoot(player: Player): BasePart?
-	local character = player.Character
-	if not character then
-		return nil
-	end
-	local humanoid = character:FindFirstChildOfClass("Humanoid")
-	if not humanoid or humanoid.Health <= 0 then
-		return nil
-	end
-	local rootPart = character:FindFirstChild("HumanoidRootPart")
-	return if rootPart and rootPart:IsA("BasePart") then rootPart else nil
-end
-
-local function targetCFrame(rootPart: BasePart, runtimePet: RuntimePet, now: number): CFrame
-	local offset = FORMATION_OFFSETS[runtimePet.Slot] or FORMATION_OFFSETS[1]
-	local bob = math.sin(now * BOB_SPEED + runtimePet.Slot * 1.7) * BOB_HEIGHT
-	return rootPart.CFrame * CFrame.new(offset.X, offset.Y + runtimePet.BottomLift + bob, offset.Z)
-end
-
-local function updatePets(deltaTime: number)
-	local alpha = 1 - math.exp(-FOLLOW_RESPONSIVENESS * math.min(deltaTime, 0.25))
-	local now = os.clock()
-	for _, runtime in pairs(runtimes) do
-		local rootPart = getCharacterRoot(runtime.Player)
-		if rootPart then
-			for _, runtimePet in pairs(runtime.Pets) do
-				local target = targetCFrame(rootPart, runtimePet, now)
-				local current = runtimePet.CurrentCFrame
-				local nextCFrame = if current then current:Lerp(target, alpha) else target
-				runtimePet.CurrentCFrame = nextCFrame
-				runtimePet.Model:PivotTo(nextCFrame)
 			end
 		end
 	end
@@ -341,7 +305,6 @@ function PetRuntimeService.Start()
 	for _, player in Players:GetPlayers() do
 		setupPlayer(player)
 	end
-	RunService.Heartbeat:Connect(updatePets)
 end
 
 return table.freeze(PetRuntimeService)
