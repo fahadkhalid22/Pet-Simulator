@@ -149,11 +149,52 @@ function Read-ModelAttributes([object]$Properties, [string]$Context) {
 		return Read-Attributes $binaryNodes[0].InnerText
 	}
 	$decoded = $jsonNodes[0].InnerText | ConvertFrom-Json
+	Assert-Condition ($null -ne $decoded) "$Context metadata JSON is empty."
 	$attributes = @{}
 	foreach ($property in $decoded.PSObject.Properties) {
-		$attributes[$property.Name] = $property.Value.Value
+		$entry = $property.Value
+		Assert-Condition ($null -ne $entry) "$Context attribute $($property.Name) has no metadata entry."
+		$valueProperty = $entry.PSObject.Properties["Value"]
+		Assert-Condition ($null -ne $valueProperty) "$Context attribute $($property.Name) has no Value field."
+		$attributes[$property.Name] = $valueProperty.Value
 	}
 	return $attributes
+}
+
+function Get-RequiredAttribute([hashtable]$Attributes, [string]$Name) {
+	Assert-Condition ($Attributes.ContainsKey($Name)) "missing required attribute $Name."
+	$value = $Attributes[$Name]
+	Assert-Condition ($null -ne $value) "required attribute $Name is null."
+	return $value
+}
+
+function Get-RequiredXmlNode([System.Xml.XmlNode]$Parent, [string]$XPath, [string]$Context) {
+	$nodes = @($Parent.SelectNodes($XPath))
+	Assert-Condition ($nodes.Count -eq 1) "$Context must occur exactly once."
+	return $nodes[0]
+}
+
+function Get-RequiredXmlAttribute([System.Xml.XmlElement]$Node, [string]$Name, [string]$Context) {
+	Assert-Condition ($Node.HasAttribute($Name)) "$Context is missing XML attribute $Name."
+	return $Node.GetAttribute($Name)
+}
+
+function Get-ItemName([System.Xml.XmlElement]$Item, [string]$Context) {
+	$nameNode = Get-RequiredXmlNode $Item "Properties/string[@name='Name']" "$Context Name"
+	Assert-Condition (-not [string]::IsNullOrWhiteSpace($nameNode.InnerText)) "$Context Name is empty."
+	return $nameNode.InnerText
+}
+
+function Get-ItemClass([System.Xml.XmlElement]$Item, [string]$Context) {
+	return Get-RequiredXmlAttribute $Item "class" "$Context Item"
+}
+
+function Get-ItemReferent([System.Xml.XmlElement]$Item, [string]$Context) {
+	return Get-RequiredXmlAttribute $Item "referent" "$Context Item"
+}
+
+function Get-ItemProperties([System.Xml.XmlElement]$Item, [string]$Context) {
+	return Get-RequiredXmlNode $Item "Properties" "$Context Properties"
 }
 
 function Read-FiniteNumber([object]$Node, [string]$Context) {
@@ -163,6 +204,8 @@ function Read-FiniteNumber([object]$Node, [string]$Context) {
 	return $value
 }
 
+$currentPetId = "validator"
+try {
 $modelDirectory = Join-Path $RepositoryRoot "src/ServerStorage/PetModels"
 $referenceDirectory = Join-Path $RepositoryRoot "assets/references/pets"
 $configPath = Join-Path $RepositoryRoot "src/ReplicatedStorage/Shared/PetConfig.lua"
@@ -178,6 +221,7 @@ $legacyCount = 0
 $v3Count = 0
 
 foreach ($pet in $pets) {
+	$currentPetId = $pet.Id
 	$modelPath = Join-Path $modelDirectory ($pet.Id + ".rbxmx")
 	$referencePath = Join-Path $referenceDirectory $pet.Reference
 	Assert-Condition (Test-Path -LiteralPath $modelPath -PathType Leaf) "Missing model file $($pet.Id).rbxmx."
@@ -193,44 +237,63 @@ foreach ($pet in $pets) {
 	Assert-Condition ($configBlock.Value -match ('ModelName\s*=\s*"' + [regex]::Escape($pet.Id) + '"')) "PetConfig model mapping is wrong for $($pet.Id)."
 
 	[xml]$xml = Get-Content -Raw -LiteralPath $modelPath
-	$model = $xml.roblox.Item
-	Assert-Condition ($model.class -eq "Model") "$($pet.Id) root is not a Model."
-	$modelName = ($model.Properties.string | Where-Object name -eq "Name").InnerText
+	$model = Get-RequiredXmlNode $xml "/roblox/Item" "$($pet.Id) root Model"
+	$modelClass = Get-ItemClass $model $pet.Id
+	Assert-Condition ($modelClass -eq "Model") "$($pet.Id) root is not a Model."
+	$modelProperties = Get-ItemProperties $model $pet.Id
+	$modelName = Get-ItemName $model $pet.Id
 	Assert-Condition ($modelName -eq $pet.Id) "$($pet.Id) root model name is incorrect."
-	$archivableNodes = @($model.Properties.SelectNodes("bool[@name='Archivable']"))
+	$archivableNodes = @($modelProperties.SelectNodes("bool[@name='Archivable']"))
 	Assert-Condition ($archivableNodes.Count -eq 0 -or $archivableNodes[0].InnerText -ne "false") "$($pet.Id) is not cloneable."
 
 	$items = @($model.SelectNodes(".//Item"))
-	$referents = @($items | ForEach-Object { $_.referent })
+	$referents = @($items | ForEach-Object { Get-ItemReferent $_ "$($pet.Id) descendant" })
 	Assert-Condition (($referents | Sort-Object -Unique).Count -eq $referents.Count) "$($pet.Id) contains duplicate referents."
 	foreach ($item in $items) {
-		Assert-Condition ($item.class -notin @("Script", "LocalScript", "ModuleScript")) "$($pet.Id) contains forbidden script class $($item.class)."
+		$itemClass = Get-ItemClass $item "$($pet.Id) descendant"
+		Assert-Condition ($itemClass -notin @("Script", "LocalScript", "ModuleScript")) "$($pet.Id) contains forbidden script class $itemClass."
 	}
 
-	$attributes = Read-ModelAttributes $model.Properties $pet.Id
-	Assert-Condition ($attributes.ModelVersion -match '^\d+\.\d+\.\d+$') "$($pet.Id) ModelVersion is not semantic."
-	Assert-Condition ($attributes.ModelVersion -in @("2.0.0", "3.0.0")) "$($pet.Id) must use final ModelVersion 3.0.0 or be explicitly legacy 2.0.0."
-	if ($attributes.ModelVersion -eq "2.0.0") {
+	$attributes = Read-ModelAttributes $modelProperties $pet.Id
+	$modelVersion = Get-RequiredAttribute $attributes "ModelVersion"
+	$petIdAttribute = Get-RequiredAttribute $attributes "PetId"
+	$petNameAttribute = Get-RequiredAttribute $attributes "PetName"
+	$rarityAttribute = Get-RequiredAttribute $attributes "Rarity"
+	$baseRateAttribute = Get-RequiredAttribute $attributes "BaseRate"
+	$forwardAxisAttribute = Get-RequiredAttribute $attributes "ForwardAxis"
+	$placeholderAttribute = Get-RequiredAttribute $attributes "Placeholder"
+	Assert-Condition ($modelVersion -match '^\d+\.\d+\.\d+$') "$($pet.Id) ModelVersion is not semantic."
+	Assert-Condition ($modelVersion -in @("2.0.0", "3.0.0")) "$($pet.Id) must use final ModelVersion 3.0.0 or be explicitly legacy 2.0.0."
+	if ($modelVersion -eq "2.0.0") {
 		$legacyCount++
 		Write-Host ("[LEGACY/NOT YET REPLACED] {0}: source model is version 2.0.0; final v3 validation was not claimed." -f $pet.Id)
 		continue
 	}
-	$sourceMeshParts = @($items | Where-Object class -eq "MeshPart")
+	$sourceMeshParts = @($model.SelectNodes(".//Item[@class='MeshPart']"))
 	if ($sourceMeshParts.Count -eq 0) {
 		$legacyCount++
 		Write-Host ("[LEGACY/NOT YET REPLACED] {0}: source model reports 3.0.0 but still uses primitive geometry; final v3 validation was not claimed." -f $pet.Id)
 		continue
 	}
 	foreach ($item in $items) {
-		Assert-Condition ($allowedV3Classes -contains $item.class) "$($pet.Id) v3 contains unknown class $($item.class)."
+		$itemClass = Get-ItemClass $item "$($pet.Id) descendant"
+		Assert-Condition ($allowedV3Classes -contains $itemClass) "$($pet.Id) v3 contains unknown class $itemClass."
+		$itemProperties = Get-ItemProperties $item "$($pet.Id) $itemClass"
+		foreach ($contentNode in @($itemProperties.SelectNodes("Content"))) {
+			$contentName = Get-RequiredXmlAttribute $contentNode "name" "$($pet.Id) $itemClass Content"
+			$isApprovedMeshContent = $itemClass -eq "MeshPart" -and $contentName -in @("MeshId", "TextureID")
+			$isApprovedParticleContent = $itemClass -eq "ParticleEmitter" -and $contentName -eq "Texture"
+			Assert-Condition ($isApprovedMeshContent -or $isApprovedParticleContent) "$($pet.Id) contains unexpected content property $itemClass.$contentName."
+		}
 	}
+	Assert-Condition ($model.OuterXml -notmatch '(?i)https?://') "$($pet.Id) contains an external HTTP URL."
 	$v3Count++
 
 	Assert-Condition ($pet.ContainsKey("MeshCritical") -and $pet.ContainsKey("MeshPartCount")) "$($pet.Id) has no approved v3 MeshPart contract."
 	Assert-Condition ($pet.MeshCritical.Count -eq $pet.MeshPartCount) "$($pet.Id) validator contract has a component-count mismatch."
-	$meshParts = @($items | Where-Object class -eq "MeshPart")
+	$meshParts = $sourceMeshParts
 	Assert-Condition ($meshParts.Count -eq $pet.MeshPartCount) "$($pet.Id) must contain exactly $($pet.MeshPartCount) MeshParts."
-	$partNames = @($meshParts | ForEach-Object { ($_.Properties.string | Where-Object name -eq "Name").InnerText })
+	$partNames = @($meshParts | ForEach-Object { Get-ItemName $_ "$($pet.Id) MeshPart" })
 	Assert-Condition (($partNames | Sort-Object -Unique).Count -eq $partNames.Count) "$($pet.Id) contains duplicate canonical components."
 	foreach ($criticalName in $pet.MeshCritical) {
 		Assert-Condition ($partNames -contains $criticalName) "$($pet.Id) is missing canonical component $criticalName."
@@ -239,93 +302,125 @@ foreach ($pet in $pets) {
 		Assert-Condition ($pet.MeshCritical -contains $partName) "$($pet.Id) contains unknown MeshPart $partName."
 	}
 
-	$attachments = @($items | Where-Object class -eq "Attachment")
-	$attachmentNames = @($attachments | ForEach-Object { ($_.Properties.string | Where-Object name -eq "Name").InnerText })
+	$attachments = @($model.SelectNodes(".//Item[@class='Attachment']"))
+	$attachmentNames = @($attachments | ForEach-Object { Get-ItemName $_ "$($pet.Id) Attachment" })
 	Assert-Condition (@($attachmentNames | Sort-Object -Unique).Count -eq $attachmentNames.Count) "$($pet.Id) contains duplicate attachment names."
 	Assert-Condition ($attachments.Count -eq $pet.Attachments.Count) "$($pet.Id) has an unexpected attachment count."
 	foreach ($expectedAttachment in $pet.Attachments) {
 		Assert-Condition ($attachmentNames -contains $expectedAttachment) "$($pet.Id) is missing attachment $expectedAttachment."
 	}
 	foreach ($attachment in $attachments) {
-		Assert-Condition ($attachment.ParentNode.class -eq "MeshPart") "$($pet.Id) attachments must be parented to MeshParts."
-		$attachmentParentName = ($attachment.ParentNode.Properties.string | Where-Object name -eq "Name").InnerText
+		$attachmentParent = $attachment.ParentNode
+		$attachmentParentClass = Get-ItemClass $attachmentParent "$($pet.Id) attachment parent"
+		Assert-Condition ($attachmentParentClass -eq "MeshPart") "$($pet.Id) attachments must be parented to MeshParts."
+		$attachmentParentName = Get-ItemName $attachmentParent "$($pet.Id) attachment parent"
 		Assert-Condition ($attachmentParentName -eq "Body") "$($pet.Id) VFX attachments must be parented to Body."
 	}
 
-	$primaryRef = ($model.Properties.Ref | Where-Object name -eq "PrimaryPart").InnerText
-	$primaryMatches = @($meshParts | Where-Object referent -eq $primaryRef)
+	$primaryRefNode = Get-RequiredXmlNode $modelProperties "Ref[@name='PrimaryPart']" "$($pet.Id) PrimaryPart"
+	$primaryRef = $primaryRefNode.InnerText
+	Assert-Condition (-not [string]::IsNullOrWhiteSpace($primaryRef)) "$($pet.Id) PrimaryPart referent is empty."
+	$primaryMatches = @($meshParts | Where-Object { (Get-ItemReferent $_ "$($pet.Id) MeshPart") -eq $primaryRef })
 	Assert-Condition ($primaryMatches.Count -eq 1) "$($pet.Id) PrimaryPart does not resolve to exactly one MeshPart."
 	$primary = $primaryMatches[0]
-	$primaryName = ($primary.Properties.string | Where-Object name -eq "Name").InnerText
+	$primaryName = Get-ItemName $primary "$($pet.Id) PrimaryPart"
 	Assert-Condition ($primaryName -eq "Body") "$($pet.Id) PrimaryPart must be Body."
-	Assert-Condition ($primary.ParentNode.referent -eq $model.referent) "$($pet.Id) Body must be a direct child of the root Model."
-	foreach ($meshPart in $meshParts | Where-Object referent -ne $primaryRef) {
-		$meshPartName = ($meshPart.Properties.string | Where-Object name -eq "Name").InnerText
-		$parentRef = $meshPart.ParentNode.referent
-		Assert-Condition ($parentRef -eq $model.referent -or $parentRef -eq $primaryRef) "$($pet.Id).$meshPartName must be a direct child of the root Model or Body."
+	$modelRef = Get-ItemReferent $model $pet.Id
+	$primaryParentRef = Get-ItemReferent $primary.ParentNode "$($pet.Id) PrimaryPart parent"
+	Assert-Condition ($primaryParentRef -eq $modelRef) "$($pet.Id) Body must be a direct child of the root Model."
+	foreach ($meshPart in $meshParts) {
+		$meshPartRef = Get-ItemReferent $meshPart "$($pet.Id) MeshPart"
+		if ($meshPartRef -eq $primaryRef) { continue }
+		$meshPartName = Get-ItemName $meshPart "$($pet.Id) MeshPart"
+		$parentRef = Get-ItemReferent $meshPart.ParentNode "$($pet.Id).$meshPartName parent"
+		Assert-Condition ($parentRef -eq $modelRef -or $parentRef -eq $primaryRef) "$($pet.Id).$meshPartName must be a direct child of the root Model or Body."
 	}
 
 	foreach ($part in $meshParts) {
-		$name = ($part.Properties.string | Where-Object name -eq "Name").InnerText
-		$sizeNodes = @($part.Properties.SelectNodes("Vector3[@name='size']"))
+		$name = Get-ItemName $part "$($pet.Id) MeshPart"
+		$partProperties = Get-ItemProperties $part "$($pet.Id).$name"
+		$sizeNodes = @($partProperties.SelectNodes("Vector3[@name='size']"))
 		Assert-Condition ($sizeNodes.Count -eq 1) "$($pet.Id).$name must have exactly one Size."
 		$size = $sizeNodes[0]
 		foreach ($axis in @("X", "Y", "Z")) {
-			$value = Read-FiniteNumber $size.$axis "$($pet.Id).$name.Size.$axis"
+			$axisNode = Get-RequiredXmlNode $size $axis "$($pet.Id).$name.Size.$axis"
+			$value = Read-FiniteNumber $axisNode "$($pet.Id).$name.Size.$axis"
 			Assert-Condition ($value -gt 0 -and $value -le 10) "$($pet.Id).$name has invalid size."
 		}
-		$frameNodes = @($part.Properties.SelectNodes("CoordinateFrame[@name='CFrame']"))
+		$frameNodes = @($partProperties.SelectNodes("CoordinateFrame[@name='CFrame']"))
 		Assert-Condition ($frameNodes.Count -eq 1) "$($pet.Id).$name must have exactly one CFrame."
 		$frame = $frameNodes[0]
 		foreach ($component in @("X", "Y", "Z", "R00", "R01", "R02", "R10", "R11", "R12", "R20", "R21", "R22")) {
-			[void](Read-FiniteNumber $frame.$component "$($pet.Id).$name.CFrame.$component")
+			$componentNode = Get-RequiredXmlNode $frame $component "$($pet.Id).$name.CFrame.$component"
+			[void](Read-FiniteNumber $componentNode "$($pet.Id).$name.CFrame.$component")
 		}
-		Assert-Condition (($part.Properties.bool | Where-Object name -eq "CanCollide").InnerText -eq "false") "$($pet.Id).$name must not collide."
-		Assert-Condition (($part.Properties.bool | Where-Object name -eq "CanTouch").InnerText -eq "false") "$($pet.Id).$name must not generate touch events."
-		Assert-Condition (($part.Properties.bool | Where-Object name -eq "CanQuery").InnerText -eq "false") "$($pet.Id).$name must not participate in spatial queries."
-		Assert-Condition (($part.Properties.bool | Where-Object name -eq "Massless").InnerText -eq "true") "$($pet.Id).$name must be massless."
-		$meshIdNodes = @($part.Properties.SelectNodes("*[@name='MeshId']"))
-		Assert-Condition ($meshIdNodes.Count -eq 1 -and -not [string]::IsNullOrWhiteSpace($meshIdNodes[0].InnerText)) "$($pet.Id).$name must reference imported mesh geometry."
-		Assert-Condition (($part.Properties.bool | Where-Object name -eq "Anchored").InnerText -eq "true") "$($pet.Id).$name must be anchored for runtime following."
+		$canCollideNode = Get-RequiredXmlNode $partProperties "bool[@name='CanCollide']" "$($pet.Id).$name CanCollide"
+		$canTouchNode = Get-RequiredXmlNode $partProperties "bool[@name='CanTouch']" "$($pet.Id).$name CanTouch"
+		$canQueryNode = Get-RequiredXmlNode $partProperties "bool[@name='CanQuery']" "$($pet.Id).$name CanQuery"
+		$masslessNode = Get-RequiredXmlNode $partProperties "bool[@name='Massless']" "$($pet.Id).$name Massless"
+		Assert-Condition ($canCollideNode.InnerText -eq "false") "$($pet.Id).$name must not collide."
+		Assert-Condition ($canTouchNode.InnerText -eq "false") "$($pet.Id).$name must not generate touch events."
+		Assert-Condition ($canQueryNode.InnerText -eq "false") "$($pet.Id).$name must not participate in spatial queries."
+		Assert-Condition ($masslessNode.InnerText -eq "true") "$($pet.Id).$name must be massless."
+		$meshIdNodes = @($partProperties.SelectNodes("Content[@name='MeshId']"))
+		Assert-Condition ($meshIdNodes.Count -eq 1) "$($pet.Id).$name must contain exactly one MeshId Content property."
+		$meshIdUrls = @($meshIdNodes[0].SelectNodes("url"))
+		Assert-Condition ($meshIdUrls.Count -eq 1 -and $meshIdUrls[0].InnerText -match '^rbxassetid://[1-9]\d*$') "$($pet.Id).$name MeshId must be a numeric Roblox asset URI."
+		$textureIdNodes = @($partProperties.SelectNodes("Content[@name='TextureID']"))
+		Assert-Condition ($textureIdNodes.Count -eq 1 -and @($textureIdNodes[0].SelectNodes("null")).Count -eq 1) "$($pet.Id).$name TextureID must be explicitly null for the material-color GLB contract."
+		$anchoredNode = Get-RequiredXmlNode $partProperties "bool[@name='Anchored']" "$($pet.Id).$name Anchored"
+		Assert-Condition ($anchoredNode.InnerText -eq "true") "$($pet.Id).$name must be anchored for runtime following."
 	}
 
-	Assert-Condition ($attributes.PetId -eq $pet.Id) "$($pet.Id) PetId attribute is wrong."
-	Assert-Condition ($attributes.PetName -eq $pet.Name) "$($pet.Id) PetName attribute is wrong."
-	Assert-Condition ($attributes.Rarity -eq $pet.Rarity) "$($pet.Id) Rarity attribute is wrong."
-	Assert-Condition ([double]$attributes.BaseRate -eq [double]$pet.Rate) "$($pet.Id) BaseRate attribute is wrong."
-	Assert-Condition ($attributes.ModelVersion -eq "3.0.0") "$($pet.Id) final source model must use ModelVersion 3.0.0."
-	Assert-Condition ($attributes.Placeholder -eq $false) "$($pet.Id) final source model must set Placeholder=false."
-	Assert-Condition ($attributes.ForwardAxis -eq "-Z") "$($pet.Id) forward-axis contract is wrong."
+	Assert-Condition ($petIdAttribute -eq $pet.Id) "$($pet.Id) PetId attribute is wrong."
+	Assert-Condition ($petNameAttribute -eq $pet.Name) "$($pet.Id) PetName attribute is wrong."
+	Assert-Condition ($rarityAttribute -eq $pet.Rarity) "$($pet.Id) Rarity attribute is wrong."
+	Assert-Condition ([double]$baseRateAttribute -eq [double]$pet.Rate) "$($pet.Id) BaseRate attribute is wrong."
+	Assert-Condition ($modelVersion -eq "3.0.0") "$($pet.Id) final source model must use ModelVersion 3.0.0."
+	Assert-Condition ($placeholderAttribute -eq $false) "$($pet.Id) final source model must set Placeholder=false."
+	Assert-Condition ($forwardAxisAttribute -eq "-Z") "$($pet.Id) forward-axis contract is wrong."
 
-	$effectItems = @($items | Where-Object { $_.class -eq "ParticleEmitter" -or $_.class -eq "PointLight" })
-	$effectNames = @($effectItems | ForEach-Object { ($_.Properties.string | Where-Object name -eq "Name").InnerText })
+	$effectItems = @($model.SelectNodes(".//Item[@class='ParticleEmitter' or @class='PointLight']"))
+	$effectNames = @($effectItems | ForEach-Object { Get-ItemName $_ "$($pet.Id) VFX node" })
 	Assert-Condition ($pet.Effects.Count -eq $pet.Attachments.Count -and $pet.Effects.Count -eq $pet.EffectClasses.Count) "$($pet.Id) validator VFX contract is misaligned."
 	Assert-Condition ($effectNames.Count -eq $pet.Effects.Count) "$($pet.Id) has an unexpected VFX-node count."
 	Assert-Condition (@($effectNames | Sort-Object -Unique).Count -eq $effectNames.Count) "$($pet.Id) contains duplicate VFX names."
 	for ($effectIndex = 0; $effectIndex -lt $pet.Effects.Count; $effectIndex++) {
 		$effectName = $pet.Effects[$effectIndex]
-		$effectMatches = @($effectItems | Where-Object { ($_.Properties.string | Where-Object name -eq "Name").InnerText -eq $effectName })
+		$effectMatches = @($effectItems | Where-Object { (Get-ItemName $_ "$($pet.Id) VFX node") -eq $effectName })
 		Assert-Condition ($effectMatches.Count -eq 1) "$($pet.Id) must contain exactly one VFX node named $effectName."
 		$effect = $effectMatches[0]
-		Assert-Condition ($effect.class -eq $pet.EffectClasses[$effectIndex]) "$($pet.Id).$effectName has the wrong class."
-		Assert-Condition ($effect.ParentNode.class -eq "Attachment") "$($pet.Id).$effectName must be parented to an Attachment."
-		$effectParentName = ($effect.ParentNode.Properties.string | Where-Object name -eq "Name").InnerText
+		$effectClass = Get-ItemClass $effect "$($pet.Id).$effectName"
+		Assert-Condition ($effectClass -eq $pet.EffectClasses[$effectIndex]) "$($pet.Id).$effectName has the wrong class."
+		$effectParent = $effect.ParentNode
+		$effectParentClass = Get-ItemClass $effectParent "$($pet.Id).$effectName parent"
+		Assert-Condition ($effectParentClass -eq "Attachment") "$($pet.Id).$effectName must be parented to an Attachment."
+		$effectParentName = Get-ItemName $effectParent "$($pet.Id).$effectName parent"
 		Assert-Condition ($effectParentName -eq $pet.Attachments[$effectIndex]) "$($pet.Id).$effectName is parented to the wrong Attachment."
 	}
 	$particleRate = 0.0
-	foreach ($emitter in @($items | Where-Object class -eq "ParticleEmitter")) {
-		$rateNodes = @($emitter.Properties.SelectNodes("float[@name='Rate']"))
+	foreach ($emitter in @($model.SelectNodes(".//Item[@class='ParticleEmitter']"))) {
+		$emitterName = Get-ItemName $emitter "$($pet.Id) ParticleEmitter"
+		$emitterProperties = Get-ItemProperties $emitter "$($pet.Id).$emitterName"
+		$rateNodes = @($emitterProperties.SelectNodes("float[@name='Rate']"))
 		Assert-Condition ($rateNodes.Count -eq 1) "$($pet.Id) particle emitter must have exactly one Rate."
 		$rate = Read-FiniteNumber $rateNodes[0] "$($pet.Id) particle rate"
 		Assert-Condition ($rate -ge 0) "$($pet.Id) particle rate may not be negative."
 		$particleRate += $rate
-		$textureNodes = @($emitter.Properties.SelectNodes("*[@name='Texture']"))
-		Assert-Condition ($textureNodes.Count -eq 0) "$($pet.Id) uses a texture asset."
+		$textureNodes = @($emitterProperties.SelectNodes("Content[@name='Texture']"))
+		Assert-Condition ($textureNodes.Count -eq 1) "$($pet.Id) particle emitter must contain exactly one Texture Content property."
+		$textureUrls = @($textureNodes[0].SelectNodes("url"))
+		Assert-Condition ($textureUrls.Count -eq 1 -and $textureUrls[0].InnerText -eq 'rbxasset://textures/particles/sparkles_main.dds') "$($pet.Id) particle emitter uses an unapproved texture URI."
 	}
 	$maxParticleRate = if ($pet.ContainsKey("MaxParticleRate")) { [double]$pet.MaxParticleRate } else { 40.0 }
 	Assert-Condition ($particleRate -le $maxParticleRate) "$($pet.Id) VFX particle rate is not restrained."
 
-	Write-Host ("[PASS] {0}: {1} MeshParts, {2} Attachments, {3} VFX nodes, version {4}" -f $pet.Id, $meshParts.Count, $attachments.Count, $effectNames.Count, $attributes.ModelVersion)
+	Write-Host ("[PASS] {0}: {1} MeshParts, {2} Attachments, {3} VFX nodes, version {4}" -f $pet.Id, $meshParts.Count, $attachments.Count, $effectNames.Count, $modelVersion)
+}
+}
+catch {
+	Write-Host ("[FAIL] {0}: {1}" -f $currentPetId, $_.Exception.Message)
+	exit 1
 }
 
 Write-Host "[PASS] PetConfig, committed models, and references have exact 6/6/6 parity."
