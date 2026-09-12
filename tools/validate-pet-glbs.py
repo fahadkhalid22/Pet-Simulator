@@ -44,6 +44,7 @@ VFX = {
 }
 
 IMPORT_SUFFIXES = ("_Node_Mesh", "_Mesh", "_Node", "")
+INITIAL_POSE_SUFFIXES = ("_Initial", "_Original", "_Composited")
 REJECTED_RAW_NAMES = ("Sphere001", "Mesh123", "BodyMesh", "Body_Node_Node", "Body_Mesh.001", "Body_extra")
 STUDIO_ALIASES = {
     "FrostBunny": {
@@ -139,6 +140,16 @@ def normalize_raw_name(raw_name: str, canonical_names: set[str], aliases: dict[s
     return None
 
 
+def normalize_pose_name(raw_name: str, canonical_names: set[str], aliases: dict[str, str]) -> str | None:
+    for suffix in INITIAL_POSE_SUFFIXES:
+        if len(raw_name) > len(suffix) and raw_name.endswith(suffix):
+            target_name = raw_name[:-len(suffix)]
+            if target_name in {"Root", "RootPart"}:
+                return "RootPart"
+            return normalize_raw_name(target_name, canonical_names, aliases)
+    return None
+
+
 def analyze_raw_names(raw_names: list[str], canonical_names: set[str], aliases: dict[str, str]) -> dict:
     normalized = [normalize_raw_name(name, canonical_names, aliases) for name in raw_names]
     accepted = [name for name in normalized if name is not None]
@@ -149,6 +160,95 @@ def analyze_raw_names(raw_names: list[str], canonical_names: set[str], aliases: 
         "duplicates": {name for name, count in counts.items() if count > 1},
         "count_ok": len(raw_names) == len(canonical_names),
     }
+
+
+def build_studio_import_fixture(canonical_names: set[str], suffix: str = "_Mesh") -> dict:
+    raw_names = [canonical_name + suffix for canonical_name in sorted(canonical_names)]
+    return {
+        "mesh_parts": [{"name": raw_name, "parent": "Model"} for raw_name in raw_names],
+        "root_parts": [{"name": "RootPart", "class": "Part", "parent": "Model"}],
+        "controllers": [{"name": "AnimationController", "class": "AnimationController", "parent": "Model"}],
+        "folders": [{"name": "InitialPoses", "class": "Folder", "parent": "Model"}],
+        "motors": [
+            {"name": raw_name + "Motor6D", "parent": raw_name, "part0": "RootPart", "part1": raw_name}
+            for raw_name in raw_names
+        ],
+        "poses": [
+            {"name": raw_name + pose_suffix, "parent": "InitialPoses"}
+            for raw_name in raw_names
+            for pose_suffix in INITIAL_POSE_SUFFIXES
+        ] + [
+            {"name": "Root" + pose_suffix, "parent": "InitialPoses"}
+            for pose_suffix in INITIAL_POSE_SUFFIXES
+        ],
+        "other_objects": [],
+    }
+
+
+def analyze_studio_import_fixture(fixture: dict, canonical_names: set[str], aliases: dict[str, str]) -> list[str]:
+    problems: list[str] = []
+    meshes = fixture["mesh_parts"]
+    raw_names = [mesh["name"] for mesh in meshes]
+    raw_name_set = set(raw_names)
+    names = analyze_raw_names(raw_names, canonical_names, aliases)
+    if names["unknown"] or names["missing"] or names["duplicates"] or not names["count_ok"]:
+        problems.append("mesh contract")
+
+    body_raw_names = [name for name in raw_names if normalize_raw_name(name, canonical_names, aliases) == "Body"]
+    body_raw_name = body_raw_names[0] if len(body_raw_names) == 1 else None
+    for mesh in meshes:
+        canonical_name = normalize_raw_name(mesh["name"], canonical_names, aliases)
+        allowed_parents = {"Model"} if canonical_name == "Body" else {"Model", body_raw_name}
+        if canonical_name and mesh["parent"] not in allowed_parents:
+            problems.append("visual hierarchy")
+
+    support_present = any(
+        fixture[key]
+        for key in ("root_parts", "controllers", "folders", "motors", "poses")
+    )
+    if support_present:
+        if fixture["root_parts"] != [{"name": "RootPart", "class": "Part", "parent": "Model"}]:
+            problems.append("RootPart profile")
+        if fixture["controllers"] != [
+            {"name": "AnimationController", "class": "AnimationController", "parent": "Model"}
+        ]:
+            problems.append("AnimationController profile")
+        if fixture["folders"] != [{"name": "InitialPoses", "class": "Folder", "parent": "Model"}]:
+            problems.append("InitialPoses profile")
+
+        motor_counts: Counter[str] = Counter()
+        for motor in fixture["motors"]:
+            canonical_name = normalize_raw_name(motor["parent"], canonical_names, aliases)
+            endpoints = (motor["part0"], motor["part1"])
+            endpoints_are_known = all(endpoint == "RootPart" or endpoint in raw_name_set for endpoint in endpoints)
+            if (
+                canonical_name is None
+                or motor["name"] != motor["parent"] + "Motor6D"
+                or motor["parent"] not in endpoints
+                or endpoints[0] == endpoints[1]
+                or not endpoints_are_known
+            ):
+                problems.append("Motor6D profile")
+            else:
+                motor_counts[canonical_name] += 1
+        if any(motor_counts[name] != 1 for name in canonical_names):
+            problems.append("Motor6D coverage")
+
+        pose_names: set[str] = set()
+        pose_targets: set[str] = set()
+        for pose in fixture["poses"]:
+            target = normalize_pose_name(pose["name"], canonical_names, aliases)
+            if pose["parent"] != "InitialPoses" or target is None or pose["name"] in pose_names:
+                problems.append("initial pose profile")
+            else:
+                pose_names.add(pose["name"])
+                pose_targets.add(target)
+        if not canonical_names.issubset(pose_targets):
+            problems.append("initial pose coverage")
+
+    if fixture["other_objects"]:
+        problems.append("unexpected objects")
+    return problems
 
 
 def validate_normalization(pet_id: str, canonical_names: set[str], aliases: dict[str, str]) -> None:
@@ -178,21 +278,73 @@ def validate_normalization(pet_id: str, canonical_names: set[str], aliases: dict
     assert wrong_count["unknown"] == {"Mesh123"} and not wrong_count["count_ok"]
 
 
+def validate_studio_import_cases(pet_id: str, canonical_names: set[str], aliases: dict[str, str]) -> None:
+    valid = build_studio_import_fixture(canonical_names)
+    assert not analyze_studio_import_fixture(valid, canonical_names, aliases), f"{pet_id} valid Studio profile failed"
+
+    clean = build_studio_import_fixture(canonical_names, suffix="")
+    for key in ("root_parts", "controllers", "folders", "motors", "poses"):
+        clean[key] = []
+    assert not analyze_studio_import_fixture(clean, canonical_names, aliases), f"{pet_id} clean canonical profile failed"
+
+    random_part = build_studio_import_fixture(canonical_names)
+    random_part["other_objects"].append({"name": "RandomPart", "class": "Part", "parent": "Model"})
+    assert analyze_studio_import_fixture(random_part, canonical_names, aliases), f"{pet_id} accepted random Part"
+
+    unknown_folder = build_studio_import_fixture(canonical_names)
+    unknown_folder["folders"].append({"name": "Extra", "class": "Folder", "parent": "Model"})
+    assert analyze_studio_import_fixture(unknown_folder, canonical_names, aliases), f"{pet_id} accepted unknown Folder"
+
+    unexpected_motor = build_studio_import_fixture(canonical_names)
+    unexpected_motor["motors"].append({
+        "name": "UnexpectedMotor6D", "parent": "Body_Mesh", "part0": "RootPart", "part1": "Body_Mesh",
+    })
+    assert analyze_studio_import_fixture(unexpected_motor, canonical_names, aliases), f"{pet_id} accepted unexpected Motor6D"
+
+    missing = build_studio_import_fixture(canonical_names)
+    missing["mesh_parts"] = [mesh for mesh in missing["mesh_parts"] if mesh["name"] != "Body_Mesh"]
+    assert analyze_studio_import_fixture(missing, canonical_names, aliases), f"{pet_id} accepted missing Body"
+
+    duplicate = build_studio_import_fixture(canonical_names)
+    duplicate["mesh_parts"].append({"name": "Body_Mesh", "parent": "Model"})
+    assert analyze_studio_import_fixture(duplicate, canonical_names, aliases), f"{pet_id} accepted duplicate Body"
+
+    forbidden = build_studio_import_fixture(canonical_names)
+    forbidden["other_objects"].extend([
+        {"name": "Injected", "class": "Script", "parent": "Model"},
+        {"name": "Remote", "class": "RemoteEvent", "parent": "Model"},
+        {"name": "Constraint", "class": "WeldConstraint", "parent": "Body_Mesh"},
+    ])
+    assert analyze_studio_import_fixture(forbidden, canonical_names, aliases), f"{pet_id} accepted forbidden objects"
+
+
 def validate_helper_safety(text: str) -> None:
     suffix_match = re.search(r"local IMPORT_SUFFIXES = \{([^}]+)\}", text)
     assert suffix_match and tuple(re.findall(r'"([^"]*)"', suffix_match.group(1))) == IMPORT_SUFFIXES
+    pose_suffix_match = re.search(r"local INITIAL_POSE_SUFFIXES = \{([^}]+)\}", text)
+    assert pose_suffix_match and tuple(re.findall(r'"([^"]*)"', pose_suffix_match.group(1))) == INITIAL_POSE_SUFFIXES
     assert not (ROOT / "tools" / "roblox" / "configure_frost_bunny.lua").exists(), "Stale dedicated helper still exists"
-    assert not any(token in text for token in (":Destroy(", "ClearAllChildren", "Remove()")), "Helper contains destructive logic"
-    stage_a = text.split("-- Stage B starts here.", 1)[0]
+    assert not any(token in text for token in ("ClearAllChildren", "Remove()")), "Helper contains broad destructive logic"
+    stage_a, stage_b = text.split("-- Stage B starts here.", 1)
     forbidden_stage_a_mutations = (
-        ".Name =", "PrimaryPart =", "SetAttribute(", "Instance.new(", ".Parent =",
-        ".Anchored =", ".CanCollide =", ".CanTouch =", ".CanQuery =", ".Massless =", "Selection:Set(",
+        "PrimaryPart =", "SetAttribute(", "Instance.new(",
+        ".Anchored =", ".CanCollide =", ".CanTouch =", ".CanQuery =", ".Massless =", "Selection:Set(", ":Destroy(",
     )
     assert not any(token in stage_a for token in forbidden_stage_a_mutations), "Stage A is not read-only"
+    assert not re.search(r"\.(?:Name|Parent)\s*=(?!=)", stage_a), "Stage A assigns a name or parent"
+    destroy_receivers = re.findall(r"([A-Za-z][A-Za-z0-9_.]*):Destroy\(\)", stage_b)
+    assert destroy_receivers == ["record.instance", "supportObject"], "Stage B cleanup is not narrowly scoped"
+    assert "GetBoundingBox" not in text, "Helper still uses importer-support-inflated model bounds"
+    forbidden_visual_mutations = (
+        "meshPart.CFrame =", "meshPart.Size =", "meshPart.MeshId =", "meshPart.TextureID =",
+        "meshPart.Color =", "meshPart.Material =", "meshPart.MaterialVariant =", "meshPart.Transparency =",
+    )
+    assert not any(token in stage_b for token in forbidden_visual_mutations), "Stage B changes visible MeshPart data"
     for required_text in (
         "[Auralit Pet Import Validation FAILED]", "Unknown MeshParts", "Missing canonical components",
-        "Duplicate canonical components", "Wrong classes", "Hierarchy problems", "No changes were made.",
-        "[Auralit Pet Import Validation PASSED]",
+        "Duplicate canonical components", "Importer support problems", "Wrong classes", "Hierarchy problems",
+        "No changes were made.", "computeVisualMeshBounds", "Visual bounds:", "record.instance:Destroy()",
+        "supportObject:Destroy()", "Studio importer support objects:", "[Auralit Pet Import Validation PASSED]",
     ):
         assert required_text in text, f"Helper diagnostic contract is missing {required_text}"
 
@@ -282,6 +434,7 @@ def validate_pet(pet_id: str, helper_text: str) -> None:
         pet_id, pet_name, rarity, base_rate, "3.0.0", "-Z",
     ), f"{pet_id} helper metadata contract differs"
     validate_normalization(pet_id, expected_names, helper["aliases"])
+    validate_studio_import_cases(pet_id, expected_names, helper["aliases"])
     assert load_powershell_validator_names(pet_id) == expected_names, (
         f"{pet_id} committed-model validator whitelist differs from its GLB contract"
     )
@@ -321,7 +474,7 @@ def validate_pet(pet_id: str, helper_text: str) -> None:
         f"{dimensions[0]:.3f} x {dimensions[1]:.3f} x {dimensions[2]:.3f}, "
         f"{len(material_names)} materials, generator/node/mesh/helper/PS names "
         f"{len(expected_names)}/{len(names)}/{len(mesh_names)}/{len(helper['names'])}/{len(expected_names)}; "
-        "canonical/_Mesh/_Node/_Node_Mesh and negative import cases passed"
+        "flat Studio importer profile and strict negative cases passed"
     )
 
 
@@ -363,7 +516,10 @@ def main() -> None:
     print("[PASS] Canonical-name parity, exact MeshPart counts, metadata, VFX, bounds, and hierarchy: all six pets")
     print("[PASS] _Mesh, _Node, and _Node_Mesh normalization: every canonical component across all six pets")
     print("[PASS] Duplicate detection, unknown-name rejection, missing-name rejection, and wrong-count rejection: all six pets")
-    print("[PASS] Universal helper Stage A is read-only and contains comprehensive failure diagnostics")
+    print("[PASS] Flat canonical and _Mesh Studio profiles, RootPart, AnimationController, InitialPoses, and Motor6Ds: all six pets")
+    print("[PASS] Random Part, unknown Folder, unexpected Motor6D, script/remote/constraint, missing, and duplicate rejection: all six pets")
+    print("[PASS] Visual-only bounds exclude importer RootPart support: all six pets")
+    print("[PASS] Universal helper Stage A is read-only; Stage B cleanup is narrowly scoped")
     if args.audit_names:
         print_name_audit(helper_text)
 

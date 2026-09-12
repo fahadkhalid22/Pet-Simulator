@@ -1,6 +1,7 @@
 -- Universal safe post-import configuration for all six Auralit v3 mesh candidates.
 -- Paste into the Roblox Studio Command Bar with exactly one imported Workspace Model selected.
 -- This helper never deletes, moves, or replaces anything in ServerStorage.
+-- After validation, it removes only the selected candidate's recognized Studio importer support objects.
 -- Raw MeshPart names must be canonical (or an explicit alias) with only an optional _Mesh, _Node, or _Node_Mesh suffix.
 
 local Selection = game:GetService("Selection")
@@ -106,11 +107,13 @@ local PET_CONTRACTS = {
 }
 
 local IMPORT_SUFFIXES = {"_Node_Mesh", "_Mesh", "_Node", ""}
+local INITIAL_POSE_SUFFIXES = {"_Initial", "_Original", "_Composited"}
 local DIAGNOSTIC_ORDER = {
 	{"General", "general"},
 	{"Unknown MeshParts", "unknownMeshParts"},
 	{"Missing canonical components", "missingComponents"},
 	{"Duplicate canonical components", "duplicateComponents"},
+	{"Importer support problems", "importerSupport"},
 	{"Wrong classes", "wrongClasses"},
 	{"Hierarchy problems", "hierarchy"},
 	{"Transform problems", "transforms"},
@@ -146,7 +149,7 @@ local function reportFailure(petId, problems, boundsStatus, rootStatus)
 		end
 	end
 	table.insert(lines, "")
-	table.insert(lines, "Bounds: " .. boundsStatus)
+	table.insert(lines, "Visual bounds: " .. boundsStatus)
 	table.insert(lines, "Root: " .. rootStatus)
 	table.insert(lines, "No changes were made.")
 	warn(table.concat(lines, "\n"))
@@ -255,9 +258,35 @@ local function isFiniteNumber(value)
 	return value == value and math.abs(value) < math.huge
 end
 
+local function isFiniteCFrame(value)
+	for _, component in {value:GetComponents()} do
+		if not isFiniteNumber(component) then
+			return false
+		end
+	end
+	return true
+end
+
 local function hasFiniteCFrame(instance)
-	for _, value in {instance.CFrame:GetComponents()} do
-		if not isFiniteNumber(value) then
+	return isFiniteCFrame(instance.CFrame)
+end
+
+local function normalizeInitialPoseName(rawName)
+	for _, suffix in INITIAL_POSE_SUFFIXES do
+		if #rawName > #suffix and string.sub(rawName, -#suffix) == suffix then
+			local targetName = string.sub(rawName, 1, #rawName - #suffix)
+			if targetName == "RootPart" or targetName == "Root" then
+				return "RootPart"
+			end
+			return normalizeMeshName(targetName)
+		end
+	end
+	return nil
+end
+
+local function hasFiniteJointTransforms(joint)
+	for _, value in {joint.C0, joint.C1, joint.Transform} do
+		if not isFiniteCFrame(value) then
 			return false
 		end
 	end
@@ -270,11 +299,44 @@ local function hasFinitePositiveSize(part)
 		and isFiniteNumber(part.Size.Z) and part.Size.Z > 0
 end
 
+local function computeVisualMeshBounds(parts)
+	local minimum = Vector3.new(math.huge, math.huge, math.huge)
+	local maximum = Vector3.new(-math.huge, -math.huge, -math.huge)
+	for _, part in parts do
+		local x, y, z, r00, r01, r02, r10, r11, r12, r20, r21, r22 = part.CFrame:GetComponents()
+		local half = part.Size * 0.5
+		local extent = Vector3.new(
+			math.abs(r00) * half.X + math.abs(r01) * half.Y + math.abs(r02) * half.Z,
+			math.abs(r10) * half.X + math.abs(r11) * half.Y + math.abs(r12) * half.Z,
+			math.abs(r20) * half.X + math.abs(r21) * half.Y + math.abs(r22) * half.Z
+		)
+		local position = Vector3.new(x, y, z)
+		local partMinimum = position - extent
+		local partMaximum = position + extent
+		minimum = Vector3.new(
+			math.min(minimum.X, partMinimum.X),
+			math.min(minimum.Y, partMinimum.Y),
+			math.min(minimum.Z, partMinimum.Z)
+		)
+		maximum = Vector3.new(
+			math.max(maximum.X, partMaximum.X),
+			math.max(maximum.Y, partMaximum.Y),
+			math.max(maximum.Z, partMaximum.Z)
+		)
+	end
+	return maximum - minimum
+end
+
 local meshParts = {}
 local meshByName = {}
 local canonicalByMeshPart = {}
 local rawNamesByCanonical = {}
 local existingVfxByName = {}
+local importerRootPart = nil
+local importerAnimationController = nil
+local importerInitialPoses = nil
+local importerMotor6Ds = {}
+local importerPoseValues = {}
 for _, descendant in candidate:GetDescendants() do
 	if descendant:IsA("LuaSourceContainer") then
 		addProblem(problems, "wrongClasses", string.format("Script %s is forbidden.", descendant:GetFullName()))
@@ -282,9 +344,7 @@ for _, descendant in candidate:GetDescendants() do
 		if not hasFiniteCFrame(descendant) or not hasFinitePositiveSize(descendant) then
 			addProblem(problems, "transforms", string.format("%s has a non-finite transform or invalid size.", descendant:GetFullName()))
 		end
-		if not descendant:IsA("MeshPart") then
-			addProblem(problems, "wrongClasses", string.format("%s is %s; character geometry must be MeshPart.", descendant:GetFullName(), descendant.ClassName))
-		else
+		if descendant:IsA("MeshPart") then
 			table.insert(meshParts, descendant)
 			if descendant.MeshId == "" then
 				addProblem(problems, "general", string.format("MeshPart %s has an empty MeshId.", descendant.Name))
@@ -297,6 +357,57 @@ for _, descendant in candidate:GetDescendants() do
 				rawNamesByCanonical[canonicalName] = rawNamesByCanonical[canonicalName] or {}
 				table.insert(rawNamesByCanonical[canonicalName], descendant.Name)
 				meshByName[canonicalName] = meshByName[canonicalName] or descendant
+			end
+		elseif descendant:IsA("Part") and descendant.Name == "RootPart" then
+			if descendant.Parent ~= candidate then
+				addProblem(problems, "importerSupport", "RootPart must be a direct child of the selected Model.")
+			elseif importerRootPart then
+				addProblem(problems, "importerSupport", "RootPart appears more than once.")
+			else
+				importerRootPart = descendant
+			end
+		else
+			addProblem(problems, "wrongClasses", string.format("%s is %s; character geometry must be MeshPart.", descendant:GetFullName(), descendant.ClassName))
+		end
+	elseif descendant:IsA("AnimationController") then
+		if descendant.Name ~= "AnimationController" or descendant.Parent ~= candidate then
+			addProblem(problems, "importerSupport", string.format("Unexpected AnimationController %s.", descendant:GetFullName()))
+		elseif importerAnimationController then
+			addProblem(problems, "importerSupport", "AnimationController appears more than once.")
+		else
+			importerAnimationController = descendant
+		end
+	elseif descendant:IsA("Folder") then
+		if descendant.Name ~= "InitialPoses" or descendant.Parent ~= candidate then
+			addProblem(problems, "importerSupport", string.format("Unexpected Folder %s.", descendant:GetFullName()))
+		elseif importerInitialPoses then
+			addProblem(problems, "importerSupport", "InitialPoses appears more than once.")
+		else
+			importerInitialPoses = descendant
+		end
+	elseif descendant:IsA("Motor6D") then
+		local parentMesh = descendant.Parent
+		local canonicalName = if parentMesh and parentMesh:IsA("MeshPart") then normalizeMeshName(parentMesh.Name) else nil
+		if not canonicalName or descendant.Name ~= parentMesh.Name .. "Motor6D" then
+			addProblem(problems, "importerSupport", string.format("Unexpected Motor6D %s.", descendant:GetFullName()))
+		else
+			table.insert(importerMotor6Ds, {instance = descendant, meshPart = parentMesh, canonicalName = canonicalName})
+			if not hasFiniteJointTransforms(descendant) then
+				addProblem(problems, "transforms", string.format("Motor6D %s has a non-finite transform.", descendant.Name))
+			end
+		end
+	elseif descendant:IsA("CFrameValue") then
+		local poseTarget = normalizeInitialPoseName(descendant.Name)
+		local validParent = descendant.Parent and descendant.Parent:IsA("Folder")
+			and descendant.Parent.Name == "InitialPoses" and descendant.Parent.Parent == candidate
+		if not validParent or not poseTarget then
+			addProblem(problems, "importerSupport", string.format("Unexpected CFrameValue %s.", descendant:GetFullName()))
+		elseif importerPoseValues[descendant.Name] then
+			addProblem(problems, "importerSupport", string.format("Initial pose %s appears more than once.", descendant.Name))
+		else
+			importerPoseValues[descendant.Name] = {instance = descendant, target = poseTarget}
+			if not isFiniteCFrame(descendant.Value) then
+				addProblem(problems, "transforms", string.format("Initial pose %s has a non-finite value.", descendant.Name))
 			end
 		end
 	elseif descendant:IsA("Attachment") or descendant:IsA("ParticleEmitter") or descendant:IsA("PointLight") then
@@ -336,6 +447,54 @@ for expectedName in expectedMeshNames do
 	end
 end
 
+local importerSupportPresent = importerRootPart ~= nil or importerAnimationController ~= nil
+	or importerInitialPoses ~= nil or #importerMotor6Ds > 0 or next(importerPoseValues) ~= nil
+local importerSupportStatus = if importerSupportPresent then "recognized" else "not present"
+if importerSupportPresent then
+	if not importerRootPart then
+		addProblem(problems, "importerSupport", "Studio importer profile is missing its direct RootPart Part.")
+	end
+	if not importerAnimationController then
+		addProblem(problems, "importerSupport", "Studio importer profile is missing its direct AnimationController.")
+	end
+	if not importerInitialPoses then
+		addProblem(problems, "importerSupport", "Studio importer profile is missing its direct InitialPoses Folder.")
+	end
+
+	local motorByCanonical = {}
+	for _, record in importerMotor6Ds do
+		if motorByCanonical[record.canonicalName] then
+			addProblem(problems, "importerSupport", string.format("Motor6D for %s appears more than once.", record.canonicalName))
+		else
+			motorByCanonical[record.canonicalName] = record.instance
+		end
+		local joint = record.instance
+		local part0IsKnown = joint.Part0 ~= nil
+			and (joint.Part0 == importerRootPart or canonicalByMeshPart[joint.Part0] ~= nil)
+		local part1IsKnown = joint.Part1 ~= nil
+			and (joint.Part1 == importerRootPart or canonicalByMeshPart[joint.Part1] ~= nil)
+		local parentIsEndpoint = joint.Part0 == record.meshPart or joint.Part1 == record.meshPart
+		if not part0IsKnown or not part1IsKnown or joint.Part0 == joint.Part1 or not parentIsEndpoint then
+			addProblem(problems, "importerSupport", string.format("Motor6D %s has invalid imported-part endpoints.", joint.Name))
+		end
+	end
+	for expectedName in expectedMeshNames do
+		if not motorByCanonical[expectedName] then
+			addProblem(problems, "importerSupport", string.format("Studio importer profile is missing %sMotor6D.", expectedName))
+		end
+	end
+
+	local poseTargets = {}
+	for _, record in importerPoseValues do
+		poseTargets[record.target] = true
+	end
+	for expectedName in expectedMeshNames do
+		if not poseTargets[expectedName] then
+			addProblem(problems, "importerSupport", string.format("InitialPoses has no deterministic pose for %s.", expectedName))
+		end
+	end
+end
+
 local body = meshByName.Body
 local rootIsValid = body ~= nil
 if not body then
@@ -346,9 +505,14 @@ elseif body.Parent ~= candidate then
 end
 for _, meshPart in meshParts do
 	local canonicalName = canonicalByMeshPart[meshPart]
-	if body and canonicalName and canonicalName ~= "Body" and meshPart.Parent ~= body then
+	local hasKnownVisualParent = meshPart.Parent == candidate or (body and meshPart.Parent == body)
+	if canonicalName and canonicalName ~= "Body" and not hasKnownVisualParent then
 		rootIsValid = false
-		addProblem(problems, "hierarchy", string.format("%s must be a direct child of Body; parent is %s.", meshPart.Name, meshPart.Parent:GetFullName()))
+		addProblem(problems, "hierarchy", string.format(
+			"%s must be a direct child of the selected Model or Body; parent is %s.",
+			meshPart.Name,
+			meshPart.Parent:GetFullName()
+		))
 	end
 end
 rootStatus = if rootIsValid then "PASS" else "FAIL"
@@ -370,17 +534,17 @@ for _, effectSpec in spec.effects do
 	end
 end
 
-local importedBounds = Vector3.zero
-local boundsOk, _, measuredBounds = pcall(candidate.GetBoundingBox, candidate)
+local visualBounds = Vector3.zero
+local boundsOk, measuredBounds = pcall(computeVisualMeshBounds, meshParts)
 if not boundsOk then
 	boundsStatus = "FAIL"
-	addProblem(problems, "general", "Model bounds could not be measured.")
+	addProblem(problems, "general", "Canonical visual MeshPart bounds could not be measured.")
 else
-	importedBounds = measuredBounds
+	visualBounds = measuredBounds
 	local boundsChecks = {
-		{axis = "X", value = importedBounds.X, minimum = spec.boundsMin.X, maximum = spec.boundsMax.X},
-		{axis = "Y", value = importedBounds.Y, minimum = spec.boundsMin.Y, maximum = spec.boundsMax.Y},
-		{axis = "Z", value = importedBounds.Z, minimum = spec.boundsMin.Z, maximum = spec.boundsMax.Z},
+		{axis = "X", value = visualBounds.X, minimum = spec.boundsMin.X, maximum = spec.boundsMax.X},
+		{axis = "Y", value = visualBounds.Y, minimum = spec.boundsMin.Y, maximum = spec.boundsMax.Y},
+		{axis = "Z", value = visualBounds.Z, minimum = spec.boundsMin.Z, maximum = spec.boundsMax.Z},
 	}
 	local validBounds = true
 	for _, check in boundsChecks do
@@ -390,13 +554,13 @@ else
 		elseif check.value < check.minimum or check.value > check.maximum then
 			validBounds = false
 			addProblem(problems, "general", string.format(
-				"Imported %s bound %.3f is outside approved %.3f-%.3f.",
+				"Visual-only %s bound %.3f is outside approved %.3f-%.3f.",
 				check.axis, check.value, check.minimum, check.maximum
 			))
 		end
 	end
 	boundsStatus = if validBounds then string.format(
-		"PASS (%.3f x %.3f x %.3f)", importedBounds.X, importedBounds.Y, importedBounds.Z
+		"PASS (%.3f x %.3f x %.3f)", visualBounds.X, visualBounds.Y, visualBounds.Z
 	) else "FAIL"
 end
 
@@ -590,6 +754,21 @@ for _, meshPart in meshParts do
 end
 body.RootPriority = 127
 
+local removedSupportObjectCount = 0
+if importerSupportPresent then
+	for _ in importerPoseValues do
+		removedSupportObjectCount += 1
+	end
+	for _, record in importerMotor6Ds do
+		record.instance:Destroy()
+		removedSupportObjectCount += 1
+	end
+	for _, supportObject in {importerInitialPoses, importerAnimationController, importerRootPart} do
+		supportObject:Destroy()
+		removedSupportObjectCount += 1
+	end
+end
+
 local particleRate = 0
 for _, effectSpec in spec.effects do
 	local attachment = getOrCreateAttachment(effectSpec)
@@ -627,8 +806,14 @@ for expectedName, className in expectedVfxClasses do
 	end
 end
 
-local _, finalBounds = candidate:GetBoundingBox()
-assert((finalBounds - importedBounds).Magnitude < 0.001, "Configuration unexpectedly changed model bounds.")
+local finalVisualBounds = computeVisualMeshBounds(meshParts)
+assert(
+	(finalVisualBounds - visualBounds).Magnitude < 0.001,
+	"Configuration unexpectedly changed visual MeshPart bounds."
+)
+assert(not candidate:FindFirstChild("RootPart"), "Importer RootPart cleanup failed.")
+assert(not candidate:FindFirstChild("AnimationController"), "Importer AnimationController cleanup failed.")
+assert(not candidate:FindFirstChild("InitialPoses"), "Importer InitialPoses cleanup failed.")
 
 Selection:Set({candidate})
 print(table.concat({
@@ -636,8 +821,10 @@ print(table.concat({
 	"Pet: " .. petId,
 	string.format("MeshParts: %d/%d", #meshParts, spec.meshCount),
 	string.format("Canonical names: PASS (%d deterministic importer names normalized)", renamedMeshPartCount),
-	"Bounds: " .. boundsStatus,
+	"Studio importer support objects: " .. importerSupportStatus,
+	"Visual bounds: " .. boundsStatus,
 	"Root: " .. rootStatus,
+	string.format("Importer cleanup: PASS (%d deterministic support objects removed)", removedSupportObjectCount),
 	"Metadata/physics/VFX: PASS",
 	"Candidate: " .. candidate:GetFullName(),
 	"No ServerStorage model was deleted, moved, or replaced.",
